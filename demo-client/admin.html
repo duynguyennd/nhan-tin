@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - ChatApp Control Center</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5/index.min.css">
+<link rel="stylesheet" href="assets/css/style.css?v=3.6">
+<link rel="stylesheet" href="assets/css/admin.css?v=3.6">
+<style>
+  html, body {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--bg, #040714);
+  }
+  body, body.admin-body {
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .admin-app {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    overflow: hidden !important;
+    z-index: 5 !important;
+  }
+  .sidebar {
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+    height: 100vh !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    background: var(--surface);
+    border-right: 1px solid var(--border-strong);
+    z-index: 10 !important;
+  }
+  .main {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    position: relative !important;
+    z-index: 5 !important;
+  }
+  .header {
+    flex-shrink: 0 !important;
+    min-height: 72px !important;
+  }
+  .content {
+    flex: 1 1 0% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+</style>
+<!-- Three.js for 3D Cyber Background -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Canvas Confetti for Broadcast & Milestones -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<!-- Chart.js for data visualization -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Lucide Modern Icons -->
+<script src="https://cdn.jsdelivr.net/npm/lucide/dist/umd/lucide.min.js"></script>
+<!-- 3D Engine & Audio FX -->
+<script src="assets/js/effects-3d.js?v=3.6"></script>
+</head>
+<body class="admin-body">
+
+<!-- 3D Interactive Canvas Background will be automatically mounted by effects-3d.js -->
+
+<div class="admin-app">
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo"><i data-lucide="shield" style="width: 22px; height: 22px; color: #fff;"></i></div>
+    <div>
+      <h2 class="sidebar-title">AdminPanel</h2>
+      <p class="sidebar-subtitle">Hệ thống quản trị 3D</p>
+    </div>
+  </div>
+  
+  <ul class="nav-list">
+    <li class="nav-item active" onclick="switchTab('dashboard')" id="nav-dashboard"><i data-lucide="layout-dashboard"></i> <span>Dashboard</span></li>
+    <li class="nav-item" onclick="switchTab('broadcast')" id="nav-broadcast"><i data-lucide="radio"></i> <span>Phát thanh</span></li>
+    <li class="nav-item" onclick="switchTab('users')" id="nav-users"><i data-lucide="users"></i> <span>Quản lý người dùng</span></li>
+    <li class="nav-item" onclick="switchTab('online-users')" id="nav-online-users"><i data-lucide="wifi"></i> <span>Online Users</span></li>
+    <li class="nav-item" onclick="switchTab('conversations')" id="nav-conversations"><i data-lucide="messages-square"></i> <span>Cuộc trò chuyện</span></li>
+    <li class="nav-item" onclick="switchTab('security')" id="nav-security"><i data-lucide="shield-alert"></i> <span>Cài đặt bảo mật</span></li>
+    <li class="nav-item" onclick="switchTab('memes')" id="nav-memes"><i data-lucide="smile"></i> <span>Kho ảnh Meme</span></li>
+    <li class="nav-item" onclick="switchTab('stats')" id="nav-stats"><i data-lucide="bar-chart-2"></i> <span>Thống kê Token & API</span></li>
+  </ul>
+  
+  <div class="sidebar-footer">
+    <button class="btn-sidebar" onclick="goToChat()"><i data-lucide="message-square" style="width: 15px; height: 15px;"></i> Vào Kênh Chat</button>
+    <button class="btn-sidebar" onclick="logout()" style="color: var(--error); border-color: rgba(244,63,94,0.3)"><i data-lucide="log-out" style="width: 15px; height: 15px; color: var(--error);"></i> Đăng xuất</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="header">
+    <div class="header-title">
+      <h1 id="pageTitle">Hệ thống phân tích & Thống kê</h1>
+      <p id="pageSubtitle">Tổng quan tình trạng vận hành các Microservices</p>
+    </div>
+
+    <!-- Live Telemetry Ticker -->
+    <div class="telemetry-bar">
+      <div class="telemetry-item">
+        <span class="telemetry-ping-dot"></span>
+        <span style="font-family: 'JetBrains Mono'; font-size: 11.5px; color: var(--accent); font-weight: 700;">LIVE CLUSTER</span>
+      </div>
+      <div class="telemetry-item" style="border-left: 1px solid var(--border-strong); padding-left: 12px;">
+        <i data-lucide="clock" style="width: 13px; height: 13px; color: var(--text-muted);"></i>
+        <span id="liveClock" style="font-family: 'JetBrains Mono'; font-size: 11.5px; color: var(--text); font-weight: 600;">--:--:--</span>
+      </div>
+      <div class="telemetry-item" style="border-left: 1px solid var(--border-strong); padding-left: 12px;">
+        <i data-lucide="cpu" style="width: 13px; height: 13px; color: var(--accent2);"></i>
+        <span style="font-family: 'JetBrains Mono'; font-size: 11.5px; font-weight: 600;">6 Nodes Healthy</span>
+      </div>
+    </div>
+
+    <div class="admin-badge">
+      <button class="btn-sound-toggle" id="btnSoundToggle" onclick="toggleSoundFX()" title="Bật/Tắt hiệu ứng âm thanh">
+        <div class="sound-bars">
+          <div class="sound-bar"></div>
+          <div class="sound-bar"></div>
+          <div class="sound-bar"></div>
+          <div class="sound-bar"></div>
+        </div>
+        <span id="soundLabel" style="font-size: 11.5px; font-weight: 700;">SFX 3D</span>
+      </button>
+      <button class="btn-sidebar" onclick="toggleTheme()" title="Đổi Giao diện Dark/Light" style="width: auto; padding: 8px 14px; font-size: 12.5px;">
+        <i data-lucide="sun-moon" style="width: 15px; height: 15px;"></i> Giao diện
+      </button>
+      <div class="user-info" style="text-align: right">
+        <div style="font-weight: 800; font-size: 14.5px; font-family: 'Outfit';" id="adminName">Admin</div>
+        <div style="font-size: 11px; color: var(--accent); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;">Quản trị viên</div>
+      </div>
+      <div class="admin-avatar" id="adminAvatar">A</div>
+    </div>
+  </div>
+  
+  <div class="content">
+    
+    <!-- ── DASHBOARD TAB ── -->
+    <div class="tab-content active" id="tab-dashboard">
+      
+      <!-- 3D Microservice Cluster Topology Hero Card -->
+      <div class="cluster-visualizer-card">
+        <div class="cluster-header">
+          <span class="cluster-title">
+            <i data-lucide="network" style="width: 20px; height: 20px; color: var(--accent);"></i>
+            Cấu trúc liên kết Microservices 3D & Dòng năng lượng thời gian thực
+          </span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="badge active"><i data-lucide="zap" style="width: 12px; height: 12px;"></i> WebSocket Netty 8083</span>
+            <span class="badge user"><i data-lucide="database" style="width: 12px; height: 12px;"></i> Cassandra + Redis</span>
+          </div>
+        </div>
+        <div id="serviceClusterCanvas"></div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card tilt-card">
+          <span class="stat-label">Tổng người dùng</span>
+          <span class="stat-value" id="valTotalUsers" data-depth="22">—</span>
+          <span class="stat-desc"><i data-lucide="database" style="width: 13px; height: 13px;"></i> Lưu trữ PostgreSQL (authdb)</span>
+          <span class="stat-icon" data-depth="36"><i data-lucide="users" style="width: 38px; height: 38px; color: var(--accent);"></i></span>
+        </div>
+        <div class="stat-card tilt-card">
+          <span class="stat-label">Đang trực tuyến</span>
+          <span class="stat-value" id="valOnlineUsers" data-depth="22">—</span>
+          <span class="stat-desc"><i data-lucide="activity" style="width: 13px; height: 13px; color: var(--success);"></i> Theo dõi trên Redis Set</span>
+          <span class="stat-icon" data-depth="36"><i data-lucide="activity" style="width: 38px; height: 38px; color: var(--success);"></i></span>
+        </div>
+        <div class="stat-card tilt-card">
+          <span class="stat-label">Tổng cuộc trò chuyện</span>
+          <span class="stat-value" id="valTotalConvs" data-depth="22">—</span>
+          <span class="stat-desc"><i data-lucide="messages-square" style="width: 13px; height: 13px;"></i> Bao gồm Chat 1-1 và Nhóm</span>
+          <span class="stat-icon" data-depth="36"><i data-lucide="message-circle" style="width: 38px; height: 38px; color: var(--accent2);"></i></span>
+        </div>
+        <div class="stat-card tilt-card">
+          <span class="stat-label">Trạng thái Services</span>
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;" data-depth="18">
+            <div class="health-indicator">
+              <span class="health-dot" id="health-auth"></span>
+              <span class="health-label">auth-service</span>
+            </div>
+            <div class="health-indicator">
+              <span class="health-dot" id="health-chat"></span>
+              <span class="health-label">chat-service</span>
+            </div>
+            <div class="health-indicator">
+              <span class="health-dot" id="health-gateway"></span>
+              <span class="health-label">ws-gateway</span>
+            </div>
+          </div>
+          <span class="stat-icon" data-depth="36"><i data-lucide="server" style="width: 38px; height: 38px; color: var(--text-muted);"></i></span>
+        </div>
+        <div class="stat-card tilt-card">
+          <span class="stat-label">Lưu trữ Messages & Memes</span>
+          <span class="stat-value" id="valStorageStats" data-depth="20" style="font-size: 20px; margin-top: 6px;">—</span>
+          <span class="stat-desc"><i data-lucide="layers" style="width: 13px; height: 13px;"></i> Cassandra NoSQL & Postgres</span>
+          <span class="stat-icon" data-depth="36"><i data-lucide="hard-drive" style="width: 38px; height: 38px; color: var(--accent);"></i></span>
+        </div>
+      </div>
+      
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3 class="chart-title"><i data-lucide="trending-up" style="width: 18px; height: 18px; color: var(--accent2);"></i> Lưu lượng tin nhắn (Message Throughput / Min)</h3>
+          <div style="position: relative; height: 260px; width: 100%;">
+            <canvas id="activeUsersChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title"><i data-lucide="user-plus" style="width: 18px; height: 18px; color: var(--accent);"></i> Tăng trưởng người dùng 30 ngày (User Growth)</h3>
+          <div style="position: relative; height: 260px; width: 100%;">
+            <canvas id="userGrowthChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title"><i data-lucide="clock" style="width: 18px; height: 18px; color: var(--warning);"></i> Phân bố giờ cao điểm (Peak Hours 0-23h)</h3>
+          <div style="position: relative; height: 260px; width: 100%;">
+            <canvas id="peakHoursChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title"><i data-lucide="pie-chart" style="width: 18px; height: 18px; color: var(--success);"></i> Cơ cấu phân quyền tài khoản (User Roles)</h3>
+          <div style="position: relative; height: 260px; width: 100%; display: flex; justify-content: center;">
+            <canvas id="userRolesChart" style="max-width: 250px"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Active Users Leaderboard -->
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title"><i data-lucide="award" style="width: 20px; height: 20px; color: #fbbf24;"></i> Bảng xếp hạng Top người dùng tích cực nhất</span>
+          <button class="btn-sidebar" onclick="exportTableToCSV('topUsersBody', 'top-active-users.csv')" style="width: auto; padding: 6px 14px; font-size: 12px;">
+            <i data-lucide="download" style="width: 13px; height: 13px;"></i> Xuất CSV
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 100px;">Thứ hạng</th>
+                <th>User ID</th>
+                <th style="text-align: right; width: 220px;">Số tin nhắn đã gửi</th>
+              </tr>
+            </thead>
+            <tbody id="topUsersBody">
+              <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 24px;">Đang tải bảng xếp hạng...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ── BROADCAST TAB ── -->
+    <div class="tab-content" id="tab-broadcast">
+      <div class="sec-card" style="max-width: 720px; margin: 0 auto;">
+        <div class="sec-card-header">
+          <h3 class="sec-card-title"><i data-lucide="radio" style="width: 22px; height: 22px; color: var(--accent);"></i> Phát thông báo toàn hệ thống (System Broadcast)</h3>
+        </div>
+        <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6;">
+          Gửi thông báo xuất hiện tức thì dưới dạng Banner 3D trên màn hình chat của toàn bộ người dùng đang trực tuyến (Real-time Redis Pub/Sub Fanout).
+        </p>
+        <div class="form-group">
+          <label>LOẠI THÔNG BÁO</label>
+          <select id="broadcastType" class="search-input" style="width: 100%; border-radius: var(--radius-md);">
+            <option value="INFO">📢 INFO — Thông tin chung (Màu Xanh Cyan)</option>
+            <option value="WARNING">⚠️ WARNING — Cảnh báo bảo trì (Màu Vàng Amber)</option>
+            <option value="URGENT">🚨 URGENT — Khẩn cấp (Màu Đỏ Rose)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>NỘI DUNG THÔNG BÁO</label>
+          <textarea id="broadcastMsgInput" class="search-input" rows="4" placeholder="Nhập nội dung cần phát thanh tới tất cả người dùng trực tuyến..." style="width: 100%; resize: vertical; border-radius: var(--radius-md);"></textarea>
+        </div>
+        <button class="btn-primary" onclick="sendBroadcast()" style="padding: 14px; font-size: 15px; width: 100%;">
+          <i data-lucide="send" style="width: 18px; height: 18px;"></i>
+          <span>Phát thanh thông báo ngay</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── ONLINE USERS TAB ── -->
+    <div class="tab-content" id="tab-online-users">
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title"><i data-lucide="wifi" style="width: 20px; height: 20px; color: var(--success);"></i> WebSocket Sessions Đang Kết Nối Thời Gian Thực</span>
+          <button class="btn-sidebar" onclick="loadLiveUsers()" style="width: auto; padding: 6px 14px; font-size: 12px;">
+            <i data-lucide="refresh-cw" style="width: 13px; height: 13px;"></i> Làm mới
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th style="text-align: center; width: 180px;">Số kết nối (Sessions)</th>
+                <th style="width: 180px;">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="onlineUsersBody">
+              <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 30px;">Đang tải danh sách kết nối...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Real-time WebSocket Gateway Logs Terminal Console -->
+      <div class="table-card" style="margin-top: 24px;">
+        <div class="table-header">
+          <span class="table-title" style="display:flex;align-items:center;gap:8px;">
+            <i data-lucide="terminal" style="width: 20px; height: 20px; color: var(--accent);"></i>
+            WebSocket Gateway (Netty Port 8083) — Nhật ký kết nối Real-time & Giám sát Session
+          </span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="badge active"><span class="telemetry-ping-dot"></span> STREAMING (86 Sessions)</span>
+            <button class="btn-sidebar" onclick="loadLiveUsers()" style="width: auto; padding: 6px 12px; font-size: 11px;">
+              <i data-lucide="refresh-cw" style="width: 12px; height: 12px;"></i> Làm mới
+            </button>
+          </div>
+        </div>
+        <div id="wsGatewayTerminal" style="background: #040714; border-radius: var(--radius-md); padding: 16px 20px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12px; line-height: 1.7; color: #a5b4fc; max-height: 320px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);">
+          <div style="color: #38bdf8;">[2026-10-06 23:28:10.120] [INFO] [ws-gateway] Starting Netty WebSocket Server on port 8083 (Epoll transport enabled)</div>
+          <div style="color: #4ade80;">[2026-10-06 23:28:10.124] [INFO] [WebSocketHandshakeHandler] Connection established: session_id=sess_9f82a1bc remote_addr=127.0.0.1:54231</div>
+          <div style="color: #a78bfa;">[2026-10-06 23:28:10.125] [INFO] [AuthTokenFilter] JWT token validated for user: admin (ROLE_ADMIN) [Token valid for 24h]</div>
+          <div style="color: #38bdf8;">[2026-10-06 23:28:10.126] [INFO] [RedisEventSubscriber] Subscribed to Redis channel 'chat.messages' for session sess_9f82a1bc</div>
+          <div style="color: #4ade80;">[2026-10-06 23:28:10.130] [INFO] [SessionRegistry] Active concurrent sessions: 86 clients across 3 cluster nodes</div>
+          <div style="color: #fbbf24;">[2026-10-06 23:28:35.132] [DEBUG] [HeartbeatManager] PING frame received from sess_9f82a1bc -> Sent PONG frame (latency: 0.3ms)</div>
+          <div style="color: #4ade80;">[2026-10-06 23:28:40.540] [INFO] [MessageDispatcher] Forwarding MESSAGE frame to Redis cluster: conv_id=conv_dev_team_2026 msg_id=msg_102</div>
+          <div style="color: #38bdf8;">[2026-10-06 23:28:40.542] [INFO] [RedisSubscriber] Redis publish received 'chat.messages' -> Fanout to 5 connected recipients</div>
+          <div style="color: #4ade80;">[2026-10-06 23:29:01.002] [INFO] [WebSocketHandshakeHandler] Connection established: session_id=sess_e431b2aa remote_addr=192.168.1.102:58104 user=hoang_nam</div>
+          <div style="color: #fbbf24;">[2026-10-06 23:29:15.890] [INFO] [PresenceHandler] PRESENCE ONLINE broadcasted for user: hoang_nam (cluster sync via Redis Pub/Sub)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CONVERSATIONS TAB ── -->
+    <div class="tab-content" id="tab-conversations">
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title"><i data-lucide="messages-square" style="width: 20px; height: 20px; color: var(--accent2);"></i> Danh sách cuộc trò chuyện trong hệ thống</span>
+          <button class="btn-sidebar" onclick="exportTableToCSV('conversationsAdminBody', 'conversations-list.csv')" style="width: auto; padding: 6px 14px; font-size: 12px;">
+            <i data-lucide="download" style="width: 13px; height: 13px;"></i> Xuất CSV
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Conversation ID</th>
+                <th style="width: 120px;">Loại</th>
+                <th>Tên hội thoại</th>
+                <th style="width: 140px; text-align: center;">Số thành viên</th>
+                <th style="width: 150px;">Ngày tạo</th>
+                <th style="width: 100px;">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="conversationsAdminBody">
+              <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">Đang tải danh sách cuộc trò chuyện...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ── USERS TAB ── -->
+    <div class="tab-content" id="tab-users">
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title"><i data-lucide="users" style="width: 20px; height: 20px; color: var(--accent);"></i> Quản lý tài khoản người dùng</span>
+          <div class="search-wrapper">
+            <input type="text" id="userSearch" class="search-input" placeholder="Tìm kiếm theo username, email..." oninput="filterUsers()">
+            <button class="btn-sidebar" onclick="exportTableToCSV('userTableBody', 'users-list.csv')" style="width: auto; padding: 6px 14px; font-size: 12px;">
+              <i data-lucide="download" style="width: 13px; height: 13px;"></i> CSV
+            </button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Người dùng</th>
+                <th>Email</th>
+                <th style="width: 110px;">Vai trò</th>
+                <th style="width: 130px;">Trạng thái</th>
+                <th style="width: 130px;">Ngày tạo</th>
+                <th style="width: 260px;">Thao tác quản trị</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+              <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">Đang tải dữ liệu người dùng...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ── SECURITY TAB ── -->
+    <div class="tab-content" id="tab-security">
+      <div class="security-grid">
+        <!-- Maintenance Mode Card -->
+        <div class="sec-card">
+          <div class="sec-card-header">
+            <h3 class="sec-card-title"><i data-lucide="wrench" style="width: 20px; height: 20px; color: var(--warning);"></i> Chế độ bảo trì hệ thống</h3>
+            <label class="switch">
+              <input type="checkbox" id="maintenanceToggle" onchange="toggleMaintenance()">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px;">
+            Khi bật, chỉ các tài khoản có quyền <strong>ADMIN</strong> mới có thể đăng nhập và gửi tin nhắn. Người dùng thông thường sẽ nhận thông báo hệ thống đang bảo trì.
+          </p>
+          <div id="maintenanceBadge" style="font-size: 12px; font-weight: 800; font-family: 'Outfit'; color: var(--text-muted);">TRẠNG THÁI: ĐANG TẢI...</div>
+        </div>
+        
+        <!-- IP Blacklist Card -->
+        <div class="sec-card">
+          <div class="sec-card-header">
+            <h3 class="sec-card-title"><i data-lucide="shield-ban" style="width: 20px; height: 20px; color: var(--error);"></i> Danh sách đen IP (Blacklist)</h3>
+          </div>
+          <div class="blacklist-input-group">
+            <input type="text" id="blacklistIpInput" class="search-input" placeholder="Nhập địa chỉ IPv4 (ví dụ: 192.168.1.100)">
+            <button class="btn-primary" style="width: auto; padding: 10px 18px; font-size: 13px;" onclick="addBlacklistIp()">Chặn IP</button>
+          </div>
+          <div class="blacklist-list" id="blacklistIpList">
+            <div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px;">Đang tải IP Blacklist...</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Security Logs Table -->
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title"><i data-lucide="file-text" style="width: 20px; height: 20px; color: var(--error);"></i> Nhật ký vi phạm bảo mật & Rate Limiting (Audit Logs)</span>
+          <button class="btn-sidebar" onclick="exportTableToCSV('securityLogsBody', 'security-audit-logs.csv')" style="width: auto; padding: 6px 14px; font-size: 12px;">
+            <i data-lucide="download" style="width: 13px; height: 13px;"></i> Xuất CSV
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 180px;">Thời gian</th>
+                <th style="width: 140px;">Địa chỉ IP</th>
+                <th>API Endpoint</th>
+                <th>Lý do vi phạm</th>
+                <th style="width: 140px;">Tài khoản</th>
+              </tr>
+            </thead>
+            <tbody id="securityLogsBody">
+              <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">Đang tải nhật ký bảo mật...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ── MEMES TAB ── -->
+    <div class="tab-content" id="tab-memes">
+      <div class="sec-card" style="margin-bottom: 24px;">
+        <h3 class="sec-card-title" style="margin-bottom: 12px;"><i data-lucide="plus-circle" style="width: 20px; height: 20px; color: var(--accent);"></i> Thêm ảnh Meme mới vào kho đối chiếu AR</h3>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <input type="text" id="newMemeUrl" class="search-input" placeholder="Dán liên kết hình ảnh (URL)..." style="flex: 2; min-width: 240px;">
+          <select id="newMemeEmotion" class="search-input" style="flex: 1; min-width: 140px;">
+            <option value="HAPPY">HAPPY (Vui vẻ)</option>
+            <option value="SAD">SAD (Buồn bã)</option>
+            <option value="ANGRY">ANGRY (Tức giận)</option>
+            <option value="SURPRISED">SURPRISED (Ngạc nhiên)</option>
+            <option value="FEARFUL">FEARFUL (Lo sợ)</option>
+            <option value="NEUTRAL">NEUTRAL (Bình thường)</option>
+          </select>
+          <button class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="addMeme()">Thêm Meme</button>
+        </div>
+      </div>
+      
+      <div id="memeGridLoading" style="text-align: center; padding: 32px; color: var(--text-muted); font-size: 14px;">Đang tải danh sách Meme...</div>
+      <div class="meme-grid" id="memeGrid" style="display: none;"></div>
+    </div>
+    
+    <!-- ── STATS TAB ── -->
+    <div class="tab-content" id="tab-stats">
+      <!-- 30-min Throughput & Top 10 Active Users Grid -->
+      <div class="charts-grid" style="margin-bottom: 24px;">
+        <div class="chart-card">
+          <h3 class="chart-title"><i data-lucide="trending-up" style="width: 18px; height: 18px; color: var(--accent2);"></i> Biểu đồ thông lượng tin nhắn 30 phút (Message Throughput / Min)</h3>
+          <div style="position: relative; height: 260px; width: 100%;">
+            <canvas id="statsThroughputChart"></canvas>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-header">
+            <span class="table-title"><i data-lucide="award" style="width: 20px; height: 20px; color: #fbbf24;"></i> Bảng xếp hạng Top 10 người dùng gửi nhiều tin nhắn nhất</span>
+          </div>
+          <div class="table-responsive" style="max-height: 260px;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Hạng</th>
+                  <th>User ID / Username</th>
+                  <th style="text-align: right; width: 140px;">Số tin nhắn</th>
+                </tr>
+              </thead>
+              <tbody id="statsTopUsersBody">
+                <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 20px;">Đang tải bảng xếp hạng...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 24px;">
+        <!-- User Tokens Table -->
+        <div class="table-card">
+          <div class="table-header">
+            <span class="table-title"><i data-lucide="key" style="width: 18px; height: 18px; color: var(--accent2);"></i> Token phát sinh theo tài khoản</span>
+            <input type="text" id="tokenSearch" class="search-input" placeholder="Tìm tên tài khoản..." oninput="filterTokenStats()" style="max-width: 180px;">
+          </div>
+          <div class="table-responsive" style="max-height: 450px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tên tài khoản</th>
+                  <th style="width: 150px; text-align: right;">Số token đã tạo</th>
+                </tr>
+              </thead>
+              <tbody id="tokenStatsBody">
+                <tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 30px;">Đang tải dữ liệu...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- API Requests Table -->
+        <div class="table-card">
+          <div class="table-header">
+            <span class="table-title"><i data-lucide="activity" style="width: 18px; height: 18px; color: var(--success);"></i> Số lượt gọi API hệ thống</span>
+            <input type="text" id="apiRequestSearch" class="search-input" placeholder="Lọc endpoint..." oninput="filterRequestStats()" style="max-width: 180px;">
+          </div>
+          <div class="table-responsive" style="max-height: 450px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>API Endpoint</th>
+                  <th style="width: 150px; text-align: right;">Số lượt gọi</th>
+                </tr>
+              </thead>
+              <tbody id="requestStatsBody">
+                <tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 30px;">Đang tải dữ liệu...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</div>
+</div>
+<div id="toast"></div>
+
+<!-- ── JAVASCRIPT LOGIC ── -->
+<script>
+const AUTH_URL = window.location.protocol === 'file:' ? 'http://localhost:8081' : window.location.origin;
+const CHAT_URL = window.location.protocol === 'file:' ? 'http://localhost:8082' : window.location.origin;
+
+let token = localStorage.getItem('chat_token');
+let myRole = localStorage.getItem('chat_role');
+let myName = localStorage.getItem('chat_username');
+
+if (!token || myRole !== 'ADMIN') {
+  alert('Bạn không có quyền truy cập trang quản trị Admin. Vui lòng đăng nhập bằng tài khoản có vai trò ADMIN!');
+  window.location.href = 'index.html';
+}
+
+document.getElementById('adminName').textContent = myName || 'Admin';
+document.getElementById('adminAvatar').textContent = (myName ? myName[0] : 'A').toUpperCase();
+
+let usersList = [];
+let chartInstance = null;
+let roleChartInstance = null;
+
+// Sound FX Controller
+function toggleSoundFX() {
+  const isEnabled = window.soundFX.toggle();
+  updateSoundButtonUI(isEnabled);
+  toast(`Âm thanh hiệu ứng: ${isEnabled ? 'Bật (ON)' : 'Tắt (MUTED)'}`, 'info');
+}
+
+function updateSoundButtonUI(isEnabled) {
+  const btn = document.getElementById('btnSoundToggle');
+  const label = document.getElementById('soundLabel');
+  if (!btn) return;
+  if (isEnabled) {
+    btn.classList.add('active');
+    if (label) label.textContent = 'SFX 3D (ON)';
+  } else {
+    btn.classList.remove('active');
+    if (label) label.textContent = 'SFX (MUTED)';
+  }
+}
+
+// Live Clock Updater
+function updateLiveClock() {
+  const clockEl = document.getElementById('liveClock');
+  if (clockEl) {
+    const d = new Date();
+    clockEl.textContent = d.toTimeString().split(' ')[0];
+  }
+}
+
+let serviceClusterInstance = null;
+function initServiceCluster() {
+  const container = document.getElementById('serviceClusterCanvas');
+  if (!container) return;
+  if (!serviceClusterInstance && window.Effects3D && window.Effects3D.ServiceCluster3D) {
+    if (container.clientWidth > 0) {
+      serviceClusterInstance = new window.Effects3D.ServiceCluster3D('serviceClusterCanvas');
+    } else {
+      setTimeout(initServiceCluster, 150);
+    }
+  }
+}
+
+window.onload = function() {
+  updateSoundButtonUI(window.soundFX.enabled);
+  switchTab('dashboard');
+  initCharts();
+  initServiceCluster();
+  updateLiveClock();
+  setInterval(updateLiveClock, 1000);
+  setInterval(refreshDashboardStats, 10000);
+  
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+}
+
+function initCharts() {
+  const ctx = document.getElementById('activeUsersChart').getContext('2d');
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['09:00', '09:10', '09:20', '09:30', '09:40', '09:45'],
+      datasets: [{
+        label: 'Số tin nhắn / Phút',
+        data: [12, 19, 3, 5, 20, 24],
+        borderColor: '#06b6d4',
+        backgroundColor: 'rgba(6, 182, 212, 0.15)',
+        fill: true,
+        tension: 0.4
+      }, {
+        label: 'Người dùng trực tuyến',
+        data: [2, 3, 2, 4, 3, 5],
+        borderColor: '#8b5cf6',
+        backgroundColor: 'rgba(139, 92, 246, 0.15)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#f3f4f6', font: { family: 'Outfit', weight: '700' } } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } },
+        y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } }
+      }
+    }
+  });
+
+  const ctx2 = document.getElementById('userRolesChart').getContext('2d');
+  roleChartInstance = new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+      labels: ['Standard User', 'Admin'],
+      datasets: [{
+        data: [0, 0],
+        backgroundColor: ['rgba(6, 182, 212, 0.75)', 'rgba(139, 92, 246, 0.75)'],
+        borderColor: ['#06b6d4', '#8b5cf6'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#f3f4f6', boxWidth: 14, font: { family: 'Outfit', weight: '700' } } }
+      }
+    }
+  });
+
+  const ctxGrowth = document.getElementById('userGrowthChart');
+  if (ctxGrowth) {
+    const growthLabels = Array.from({length: 12}, (_, i) => `Tuần ${i + 1}`);
+    const growthData = [8, 14, 19, 26, 31, 38, 44, 49, 53, 56, 59, 61];
+    new Chart(ctxGrowth.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: growthLabels,
+        datasets: [{
+          label: 'Người dùng tích lũy',
+          data: growthData,
+          backgroundColor: 'rgba(6, 182, 212, 0.65)',
+          borderColor: '#06b6d4',
+          borderWidth: 1,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#f3f4f6', font: { family: 'Outfit', weight: '700' } } }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } },
+          y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } }
+        }
+      }
+    });
+  }
+
+  const ctxPeak = document.getElementById('peakHoursChart');
+  if (ctxPeak) {
+    const hours = ['00h', '03h', '06h', '09h', '12h', '15h', '18h', '21h'];
+    const peakActivity = [6, 3, 12, 54, 78, 65, 95, 82];
+    new Chart(ctxPeak.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: hours,
+        datasets: [{
+          label: 'Lượng truy cập (%)',
+          data: peakActivity,
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.15)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#f3f4f6', font: { family: 'Outfit', weight: '700' } } }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } },
+          y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } }
+        }
+      }
+    });
+  }
+}
+
+function updateChartsData(users) {
+  if (!roleChartInstance) return;
+  const adminCount = users.filter(u => u.role === 'ADMIN').length;
+  const userCount = users.filter(u => u.role === 'USER').length;
+  
+  roleChartInstance.data.datasets[0].data = [userCount, adminCount];
+  roleChartInstance.update();
+  
+  if (chartInstance) {
+    const online = parseInt(document.getElementById('valOnlineUsers').textContent) || 0;
+    chartInstance.data.datasets[1].data[chartInstance.data.datasets[1].data.length - 1] = online;
+    chartInstance.update();
+  }
+}
+
+// ── NAVIGATION & TAB SWITCH ──
+function switchTab(tab) {
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.id === `nav-${tab}`);
+  });
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.toggle('active', content.id === `tab-${tab}`);
+  });
+  
+  window.soundFX.playTick();
+
+  const titles = {
+    dashboard: { t: "Hệ thống phân tích & Thống kê", s: "Tổng quan tình trạng vận hành các Microservices" },
+    broadcast: { t: "Phát thanh thông báo toàn hệ thống", s: "Gửi thông báo xuất hiện tức thì tới tất cả người dùng trực tuyến" },
+    users: { t: "Quản lý tài khoản người dùng", s: "Xem danh sách, phân quyền, cấm chat và khóa tài khoản vi phạm" },
+    'online-users': { t: "Theo dõi kết nối thời gian thực (Live Users)", s: "Danh sách WebSocket session trực tuyến và ngắt kết nối cưỡng chế" },
+    conversations: { t: "Quản lý các cuộc trò chuyện", s: "Danh sách nhóm chat, chat 1-1 và giải phóng dữ liệu" },
+    security: { t: "Bảo mật & Kiểm soát hệ thống", s: "Cấu hình danh sách đen IP, chế độ bảo trì và logs sự kiện" },
+    memes: { t: "Quản trị cơ sở dữ liệu Meme", s: "Quản lý hình ảnh meme dùng đối chiếu biểu cảm AR Camera" },
+    stats: { t: "Thống kê lượng Token & API Requests", s: "Theo dõi lượng Token sản sinh cho từng tài khoản và tần suất gọi API" }
+  };
+  
+  if (titles[tab]) {
+    document.getElementById('pageTitle').textContent = titles[tab].t;
+    document.getElementById('pageSubtitle').textContent = titles[tab].s;
+  }
+  
+  if (tab === 'dashboard') {
+    refreshDashboardStats();
+    loadThroughputData();
+    loadTopUsers();
+    loadUserGrowthData();
+    loadPeakHoursData();
+    loadStorageStats();
+  } else if (tab === 'users') {
+    loadUsers();
+  } else if (tab === 'online-users') {
+    loadLiveUsers();
+  } else if (tab === 'conversations') {
+    loadConversationsAdmin();
+  } else if (tab === 'security') {
+    loadMaintenanceStatus();
+    loadBlacklistIps();
+    loadSecurityLogs();
+  } else if (tab === 'memes') {
+    loadMemes();
+  } else if (tab === 'stats') {
+    loadStatsData();
+  }
+  
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+}
+
+function goToChat() {
+  window.location.href = 'index.html';
+}
+
+function logout() {
+  localStorage.removeItem('chat_token');
+  localStorage.removeItem('chat_role');
+  localStorage.removeItem('chat_username');
+  localStorage.removeItem('chat_my_id');
+  window.location.href = 'index.html';
+}
+
+// ── STATS LOADING (DASHBOARD) ──
+async function refreshDashboardStats() {
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/system/stats`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const stats = await r.json();
+      if (window.Effects3D) {
+        window.Effects3D.animateValue('valTotalUsers', parseInt(document.getElementById('valTotalUsers').textContent) || 0, stats.totalUsers);
+        window.Effects3D.animateValue('valOnlineUsers', parseInt(document.getElementById('valOnlineUsers').textContent) || 0, stats.onlineUsers);
+        window.Effects3D.animateValue('valTotalConvs', parseInt(document.getElementById('valTotalConvs').textContent) || 0, stats.totalConversations >= 0 ? stats.totalConversations : 0);
+      } else {
+        document.getElementById('valTotalUsers').textContent = stats.totalUsers;
+        document.getElementById('valOnlineUsers').textContent = stats.onlineUsers;
+        document.getElementById('valTotalConvs').textContent = stats.totalConversations >= 0 ? stats.totalConversations : 'Lỗi kết nối';
+      }
+    }
+  } catch (e) {
+    console.error('Lỗi tải stats:', e);
+  }
+
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/system/health`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const health = await r.json();
+      setHealthUI('auth', health['auth-service']);
+      setHealthUI('chat', health['chat-service']);
+      setHealthUI('gateway', health['ws-gateway']);
+    }
+  } catch (e) {
+    console.error('Lỗi tải health check:', e);
+  }
+  
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/users`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const users = await r.json();
+      updateChartsData(users);
+    }
+  } catch (e) {}
+}
+
+function setHealthUI(service, status) {
+  const dot = document.getElementById(`health-${service}`);
+  if (!dot) return;
+  const up = status === 'UP';
+  dot.className = `health-dot ${up ? 'up' : 'down'}`;
+}
+
+// ── USER MANAGEMENT TAB ──
+async function loadUsers() {
+  const tbody = document.getElementById('userTableBody');
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/users`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      usersList = await r.json();
+      renderUsers(usersList);
+      updateChartsData(usersList);
+    } else {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--error);padding:20px;">Lỗi không thể tải dữ liệu: ${r.statusText}</td></tr>`;
+    }
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--error);padding:20px;">Lỗi kết nối API auth-service</td></tr>`;
+  }
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById('userTableBody');
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px;">Không có người dùng nào khớp yêu cầu.</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = users.map(u => {
+    const isBanned = u.banned;
+    const isMe = u.id === localStorage.getItem('chat_my_id');
+    const dateStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '—';
+    
+    return `
+      <tr>
+        <td style="font-weight:700;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="admin-avatar" style="width:30px;height:30px;font-size:12px;">${u.username[0].toUpperCase()}</div>
+            <span>${escHtml(u.username)}</span>
+          </div>
+        </td>
+        <td>${escHtml(u.email || '—')}</td>
+        <td><span class="badge ${u.role.toLowerCase()}">${u.role}</span></td>
+        <td><span class="badge ${isBanned ? 'banned' : 'active'}">${isBanned ? 'BỊ KHÓA' : 'HOẠT ĐỘNG'}</span></td>
+        <td>${dateStr}</td>
+        <td>
+          <div class="actions-cell">
+            ${isMe ? '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Tài khoản hiện tại</span>' : `
+              <button class="btn-action ${isBanned ? 'unban' : 'ban'}" onclick="toggleBanUser('${u.id}', ${!isBanned})">
+                ${isBanned ? 'Mở khóa' : 'Khóa'}
+              </button>
+              <button class="btn-action role" onclick="changeUserRole('${u.id}', '${u.role === 'ADMIN' ? 'USER' : 'ADMIN'}')">
+                Đổi quyền
+              </button>
+              <button class="btn-action delete" onclick="deleteUser('${u.id}')">Xóa</button>
+            `}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+}
+
+function filterUsers() {
+  const query = document.getElementById('userSearch').value.toLowerCase().trim();
+  const filtered = usersList.filter(u => 
+    u.username.toLowerCase().includes(query) || (u.email && u.email.toLowerCase().includes(query))
+  );
+  renderUsers(filtered);
+}
+
+async function toggleBanUser(id, ban) {
+  if (!confirm(`Bạn có chắc chắn muốn ${ban ? 'Khóa' : 'Mở khóa'} tài khoản này?`)) return;
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/users/${id}/ban`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ ban })
+    });
+    if (r.ok) {
+      toast(`${ban ? 'Đã khóa' : 'Đã mở khóa'} tài khoản thành công!`, 'success');
+      window.soundFX.playPop();
+      await loadUsers();
+    } else {
+      toast('Thao tác thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối khi khóa user!', 'error');
+  }
+}
+
+async function changeUserRole(id, newRole) {
+  if (!confirm(`Bạn có chắc muốn đổi vai trò của người dùng này thành ${newRole}?`)) return;
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/users/${id}/role`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ role: newRole })
+    });
+    if (r.ok) {
+      toast('Đổi vai trò thành công!', 'success');
+      window.soundFX.playSuccess();
+      await loadUsers();
+    } else {
+      toast('Thao tác thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối đổi quyền!', 'error');
+  }
+}
+
+async function deleteUser(id) {
+  if (!confirm('HÀNH ĐỘNG NÀY KHÔNG THỂ KHÔI PHỤC! Bạn có thực sự muốn xóa vĩnh viễn tài khoản này?')) return;
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/users/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      toast('Đã xóa người dùng thành công!', 'success');
+      await loadUsers();
+    } else {
+      toast('Xóa người dùng thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối xóa user!', 'error');
+  }
+}
+
+// ── SECURITY & BLACKLIST TAB ──
+async function loadMaintenanceStatus() {
+  const badge = document.getElementById('maintenanceBadge');
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/system/maintenance`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const data = await r.json();
+      document.getElementById('maintenanceToggle').checked = data.maintenance;
+      badge.innerHTML = `TRẠNG THÁI: ${data.maintenance ? '<span style="color:var(--error);font-weight:800;">ĐANG BẢO TRÌ</span>' : '<span style="color:var(--success);font-weight:800;">HOẠT ĐỘNG BÌNH THƯỜNG</span>'}`;
+    }
+  } catch (e) {
+    badge.textContent = 'TRẠNG THÁI: LỖI KẾT NỐI';
+  }
+}
+
+async function toggleMaintenance() {
+  const active = document.getElementById('maintenanceToggle').checked;
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/system/maintenance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ maintenance: active })
+    });
+    if (r.ok) {
+      toast(`Đã ${active ? 'bật' : 'tắt'} chế độ bảo trì hệ thống!`, 'success');
+      window.soundFX.playPop();
+      await loadMaintenanceStatus();
+    } else {
+      toast('Cập nhật trạng thái bảo trì thất bại!', 'error');
+      document.getElementById('maintenanceToggle').checked = !active;
+    }
+  } catch (e) {
+    toast('Lỗi kết nối cấu hình bảo trì!', 'error');
+    document.getElementById('maintenanceToggle').checked = !active;
+  }
+}
+
+async function loadBlacklistIps() {
+  const container = document.getElementById('blacklistIpList');
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/system/blacklist-ip`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const ips = await r.json();
+      if (ips.length === 0) {
+        container.innerHTML = '<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px;">Chưa chặn IP nào.</div>';
+        return;
+      }
+      container.innerHTML = ips.map(ip => `
+        <div class="blacklist-item">
+          <span style="font-weight:700;font-size:13px;color:var(--error);display:flex;align-items:center;gap:6px;"><i data-lucide="slash" style="width:14px;height:14px;color:var(--error);"></i> ${escHtml(ip)}</span>
+          <button class="btn-delete-sm" onclick="removeBlacklistIp('${escHtml(ip)}')"><i data-lucide="unlock" style="width:12px;height:12px;"></i> Gỡ chặn</button>
+        </div>
+      `).join('');
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    }
+  } catch (e) {
+    container.innerHTML = '<div style="padding:16px; text-align:center; color:var(--error); font-size:12px;">Lỗi tải IP Blacklist.</div>';
+  }
+}
+
+async function addBlacklistIp() {
+  const ipInput = document.getElementById('blacklistIpInput');
+  const ip = ipInput.value.trim();
+  if (!ip) { toast('Vui lòng nhập địa chỉ IP!', 'error'); return; }
+  
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/system/blacklist-ip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ ip })
+    });
+    if (r.ok) {
+      toast(`Đã đưa IP ${ip} vào danh sách đen!`, 'success');
+      ipInput.value = '';
+      window.soundFX.playPop();
+      await loadBlacklistIps();
+      await loadSecurityLogs();
+    } else {
+      toast('Thêm IP Blacklist thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối thêm blacklist!', 'error');
+  }
+}
+
+async function removeBlacklistIp(ip) {
+  if (!confirm(`Bạn có muốn gỡ chặn địa chỉ IP ${ip}?`)) return;
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/system/blacklist-ip/${ip}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      toast(`Đã gỡ chặn IP ${ip}!`, 'success');
+      await loadBlacklistIps();
+      await loadSecurityLogs();
+    } else {
+      toast('Gỡ chặn IP thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối gỡ IP blacklist!', 'error');
+  }
+}
+
+async function loadSecurityLogs() {
+  const tbody = document.getElementById('securityLogsBody');
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/system/logs`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const logsJson = await r.json();
+      if (logsJson.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Nhật ký sự kiện trống.</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = logsJson.map(logStr => {
+        try {
+          const log = JSON.parse(logStr);
+          const dateStr = log.timestamp ? new Date(log.timestamp).toLocaleString('vi-VN') : '—';
+          return `
+            <tr>
+              <td>${dateStr}</td>
+              <td style="color:var(--error);font-weight:700;">${escHtml(log.ip)}</td>
+              <td style="font-family:monospace;font-size:12px;">${escHtml(log.path)}</td>
+              <td><span style="color:var(--warning);font-weight:600;">${escHtml(log.reason)}</span></td>
+              <td>${escHtml(log.username || 'n/a')}</td>
+            </tr>
+          `;
+        } catch (err) {
+          return `<tr><td colspan="5" style="color:var(--text-muted);font-style:italic;">Lỗi phân tích log: ${escHtml(logStr)}</td></tr>`;
+        }
+      }).join('');
+      
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    }
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--error);padding:20px;">Lỗi kết nối API logs.</td></tr>';
+  }
+}
+
+// ── MEME MANAGEMENT TAB ──
+async function loadMemes() {
+  const grid = document.getElementById('memeGrid');
+  const loading = document.getElementById('memeGridLoading');
+  try {
+    const r = await fetch(`${CHAT_URL}/api/memes`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const memes = await r.json();
+      grid.innerHTML = '';
+      if (memes.length === 0) {
+        loading.style.display = 'block';
+        loading.textContent = 'Chưa có ảnh Meme nào trong kho.';
+        grid.style.display = 'none';
+        return;
+      }
+      
+      memes.forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'meme-card tilt-card';
+        item.innerHTML = `
+          <img src="${m.url}" class="meme-thumb" onerror="this.src='https://placehold.co/150?text=Lỗi+ảnh'">
+          <div class="meme-emotion">${escHtml(m.emotion)}</div>
+          <button class="btn-delete-meme" onclick="deleteMeme('${m.id}')" title="Xóa Meme"><i data-lucide="trash" style="width:14px;height:14px;"></i></button>
+        `;
+        grid.appendChild(item);
+      });
+      
+      loading.style.display = 'none';
+      grid.style.display = 'grid';
+      
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    }
+  } catch (e) {
+    loading.textContent = 'Lỗi kết nối API kho Meme.';
+  }
+}
+
+async function addMeme() {
+  const urlInput = document.getElementById('newMemeUrl');
+  const emotionInput = document.getElementById('newMemeEmotion');
+  const url = urlInput.value.trim();
+  const emotion = emotionInput.value;
+  
+  if (!url) { toast('Vui lòng nhập URL ảnh Meme!', 'error'); return; }
+  
+  try {
+    const r = await fetch(`${CHAT_URL}/api/memes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ url, emotion })
+    });
+    
+    if (r.ok) {
+      toast('Đã thêm Meme thành công!', 'success');
+      urlInput.value = '';
+      window.soundFX.playSuccess();
+      await loadMemes();
+    } else {
+      toast('Thêm Meme thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối thêm Meme!', 'error');
+  }
+}
+
+async function deleteMeme(id) {
+  if (!confirm('Bạn có chắc chắn muốn xóa ảnh Meme này?')) return;
+  try {
+    const r = await fetch(`${CHAT_URL}/api/memes/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      toast('Đã xóa Meme thành công!', 'success');
+      await loadMemes();
+    } else {
+      toast('Xóa Meme thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối khi xóa Meme!', 'error');
+  }
+}
+
+// ── STATS & API TRACKING ──
+let rawTokenStats = {};
+let rawRequestStats = {};
+
+let statsThroughputChartInstance = null;
+async function loadStatsData() {
+  const tokenBody = document.getElementById('tokenStatsBody');
+  const requestBody = document.getElementById('requestStatsBody');
+  tokenBody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 30px;">Đang tải dữ liệu...</td></tr>';
+  requestBody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 30px;">Đang tải dữ liệu...</td></tr>';
+
+  // Load statsThroughputChart in tab-stats
+  const canvasStats = document.getElementById('statsThroughputChart');
+  if (canvasStats && !statsThroughputChartInstance) {
+    const ctxS = canvasStats.getContext('2d');
+    statsThroughputChartInstance = new Chart(ctxS, {
+      type: 'line',
+      data: {
+        labels: ['09:00', '09:05', '09:10', '09:15', '09:20', '09:25', '09:30'],
+        datasets: [{
+          label: 'Throughput (tin nhắn/phút)',
+          data: [42, 68, 95, 145, 180, 215, 260],
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139, 92, 246, 0.2)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#f3f4f6', font: { family: 'Outfit', weight: '700' } } } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } },
+          y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } }
+        }
+      }
+    });
+  }
+
+  // Load statsTopUsersBody
+  const statsTopBody = document.getElementById('statsTopUsersBody');
+  if (statsTopBody) {
+    statsTopBody.innerHTML = `
+      <tr><td><span class="podium-badge gold">🥇</span></td><td style="font-family:monospace;font-weight:600;">admin</td><td style="text-align:right;font-weight:800;color:var(--success);font-family:'Outfit';">3,420 msgs</td></tr>
+      <tr><td><span class="podium-badge silver">🥈</span></td><td style="font-family:monospace;font-weight:600;">hoang_nam</td><td style="text-align:right;font-weight:800;color:var(--success);font-family:'Outfit';">2,815 msgs</td></tr>
+      <tr><td><span class="podium-badge bronze">🥉</span></td><td style="font-family:monospace;font-weight:600;">le_mai</td><td style="text-align:right;font-weight:800;color:var(--success);font-family:'Outfit';">2,140 msgs</td></tr>
+      <tr><td><span class="podium-badge">4</span></td><td style="font-family:monospace;font-weight:600;">tran_dung</td><td style="text-align:right;font-weight:800;color:var(--success);font-family:'Outfit';">1,920 msgs</td></tr>
+      <tr><td><span class="podium-badge">5</span></td><td style="font-family:monospace;font-weight:600;">nguyen_an</td><td style="text-align:right;font-weight:800;color:var(--success);font-family:'Outfit';">1,450 msgs</td></tr>
+    `;
+  }
+
+  try {
+    const tokenRes = await fetch(`${AUTH_URL}/api/auth/admin/stats/tokens`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (tokenRes.ok) {
+      rawTokenStats = await tokenRes.json();
+      renderTokenStats(rawTokenStats);
+    } else {
+      tokenBody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--error); padding: 20px;">Lỗi tải dữ liệu</td></tr>';
+    }
+  } catch (e) {
+    tokenBody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--error); padding: 20px;">Lỗi kết nối API</td></tr>';
+  }
+
+  try {
+    const requestRes = await fetch(`${AUTH_URL}/api/auth/admin/stats/requests`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (requestRes.ok) {
+      rawRequestStats = await requestRes.json();
+      renderRequestStats(rawRequestStats);
+    } else {
+      requestBody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--error); padding: 20px;">Lỗi tải dữ liệu</td></tr>';
+    }
+  } catch (e) {
+    requestBody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--error); padding: 20px;">Lỗi kết nối API</td></tr>';
+  }
+}
+
+function renderTokenStats(stats) {
+  const tbody = document.getElementById('tokenStatsBody');
+  const entries = Object.entries(stats);
+  if (entries.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 30px;">Chưa phát sinh token nào.</td></tr>';
+    return;
+  }
+  
+  entries.sort((a, b) => b[1] - a[1]);
+
+  tbody.innerHTML = entries.map(([username, count]) => `
+    <tr>
+      <td>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="admin-avatar" style="width: 26px; height: 26px; font-size: 11px;">${username[0].toUpperCase()}</div>
+          <span style="font-weight: 700;">${escHtml(username)}</span>
+        </div>
+      </td>
+      <td style="text-align: right; font-weight: 800; color: var(--accent); font-family: 'Outfit'; font-size: 15px;">${count}</td>
+    </tr>
+  `).join('');
+}
+
+function renderRequestStats(stats) {
+  const tbody = document.getElementById('requestStatsBody');
+  const entries = Object.entries(stats);
+  if (entries.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 30px;">Chưa có lượt gọi API nào.</td></tr>';
+    return;
+  }
+
+  entries.sort((a, b) => b[1] - a[1]);
+
+  tbody.innerHTML = entries.map(([endpoint, count]) => {
+    const parts = endpoint.split(' ');
+    const method = parts[0] || 'GET';
+    const path = parts.slice(1).join(' ') || endpoint;
+    const methodClass = method.toLowerCase();
+    
+    return `
+      <tr>
+        <td>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="badge ${methodClass}" style="font-size: 10px; padding: 3px 8px; min-width: 55px; text-align: center;">${method}</span>
+            <span style="font-family: monospace; font-size: 12.5px; color: var(--text);">${escHtml(path)}</span>
+          </div>
+        </td>
+        <td style="text-align: right; font-weight: 800; color: var(--success); font-family: 'Outfit'; font-size: 15px;">${count}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterTokenStats() {
+  const query = document.getElementById('tokenSearch').value.toLowerCase().trim();
+  const filtered = {};
+  for (const [user, val] of Object.entries(rawTokenStats)) {
+    if (user.toLowerCase().includes(query)) {
+      filtered[user] = val;
+    }
+  }
+  renderTokenStats(filtered);
+}
+
+function filterRequestStats() {
+  const query = document.getElementById('apiRequestSearch').value.toLowerCase().trim();
+  const filtered = {};
+  for (const [endpoint, val] of Object.entries(rawRequestStats)) {
+    if (endpoint.toLowerCase().includes(query)) {
+      filtered[endpoint] = val;
+    }
+  }
+  renderRequestStats(filtered);
+}
+
+// ── UTILITIES & BROADCAST ──
+function exportTableToCSV(tbodyId, filename = 'export.csv') {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  if (!rows.length) { toast('Không có dữ liệu để xuất CSV', 'error'); return; }
+
+  const csvRows = [];
+  rows.forEach(row => {
+    const cols = Array.from(row.querySelectorAll('td, th'));
+    const rowData = cols.map(c => '"' + c.innerText.replace(/"/g, '""').replace(/\n/g, ' ') + '"');
+    csvRows.push(rowData.join(','));
+  });
+
+  const blob = new Blob(['\uFEFF' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`Đã xuất file CSV (${filename})!`, 'success');
+  window.soundFX.playPop();
+}
+
+async function sendBroadcast() {
+  const message = document.getElementById('broadcastMsgInput').value.trim();
+  const type = document.getElementById('broadcastType').value;
+  if (!message) { toast('Vui lòng nhập nội dung thông báo!', 'error'); return; }
+
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/broadcast`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ message, type })
+    });
+    if (r.ok) {
+      toast('Đã phát thanh thông báo thành công tới toàn hệ thống!', 'success');
+      document.getElementById('broadcastMsgInput').value = '';
+      if (window.Effects3D) window.Effects3D.triggerConfetti();
+      window.soundFX.playSuccess();
+    } else {
+      toast('Phát thanh thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối phát thanh thông báo!', 'error');
+  }
+}
+
+async function loadLiveUsers() {
+  const tbody = document.getElementById('onlineUsersBody');
+  try {
+    const r = await fetch(`${CHAT_URL}/api/gateway/sessions`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const data = await r.json();
+      const entries = Object.entries(data);
+      if (!entries.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:30px;">Không có WebSocket session nào active.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = entries.map(([userId, count]) => `
+        <tr>
+          <td style="font-family:monospace;font-size:13px;font-weight:600;">${userId}</td>
+          <td style="text-align:center;"><span class="badge active">${count} session(s)</span></td>
+          <td>
+            <button class="btn-action ban" onclick="disconnectSession('${userId}')">Ngắt kết nối</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--error);padding:20px;">Lỗi kết nối ws-gateway API.</td></tr>';
+  }
+}
+
+async function disconnectSession(userId) {
+  if (!confirm('Bạn có chắc chắn muốn ngắt kết nối WebSocket của user này?')) return;
+  try {
+    const r = await fetch(`${CHAT_URL}/api/gateway/sessions/${userId}/disconnect`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      toast('Đã ngắt kết nối session!', 'success');
+      loadLiveUsers();
+    } else {
+      toast('Ngắt kết nối thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Ngắt kết nối thất bại!', 'error');
+  }
+}
+
+async function loadConversationsAdmin() {
+  const tbody = document.getElementById('conversationsAdminBody');
+  try {
+    const r = await fetch(`${CHAT_URL}/api/admin/chat/conversations?page=0&size=50`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const res = await r.json();
+      const convs = res.content || [];
+      if (!convs.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px;">Chưa có cuộc trò chuyện nào.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = convs.map(c => `
+        <tr>
+          <td style="font-family:monospace;font-size:12px;">${c.id}</td>
+          <td><span class="badge ${c.type === 'GROUP' ? 'admin' : 'user'}">${c.type}</span></td>
+          <td style="font-weight:700;">${escHtml(c.name || 'Chat 1-1')}</td>
+          <td style="text-align:center;font-weight:700;">${c.memberCount}</td>
+          <td>${c.createdAt ? new Date(c.createdAt).toLocaleDateString('vi-VN') : '—'}</td>
+          <td>
+            <button class="btn-action delete" onclick="deleteConversationAdmin('${c.id}')">Xóa</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--error);padding:20px;">Lỗi kết nối chat-service API.</td></tr>';
+  }
+}
+
+async function deleteConversationAdmin(id) {
+  if (!confirm('Bạn có chắc chắn muốn XÓA cuộc trò chuyện này?')) return;
+  try {
+    const r = await fetch(`${CHAT_URL}/api/admin/chat/conversations/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      toast('Đã xóa cuộc trò chuyện!', 'success');
+      loadConversationsAdmin();
+    } else {
+      toast('Xóa thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Xóa thất bại!', 'error');
+  }
+}
+
+async function loadThroughputData() {
+  try {
+    const r = await fetch(`${CHAT_URL}/api/admin/chat/stats/throughput`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok && chartInstance) {
+      const res = await r.json();
+      const points = res.dataPoints || [];
+      const labels = points.map(p => {
+        const d = new Date(p.minute * 60000);
+        return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+      });
+      const data = points.map(p => p.count);
+      chartInstance.data.labels = labels;
+      chartInstance.data.datasets[0].data = data;
+      chartInstance.update();
+    }
+  } catch (e) {}
+}
+
+async function loadTopUsers() {
+  const tbody = document.getElementById('topUsersBody');
+  try {
+    const r = await fetch(`${CHAT_URL}/api/admin/chat/stats/top-users?limit=10`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const users = await r.json();
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px;">Chưa có dữ liệu gửi tin nhắn.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(u => {
+        let rankBadge = `<span class="podium-badge">${u.rank}</span>`;
+        if (u.rank === 1) rankBadge = `<span class="podium-badge gold">🥇</span>`;
+        else if (u.rank === 2) rankBadge = `<span class="podium-badge silver">🥈</span>`;
+        else if (u.rank === 3) rankBadge = `<span class="podium-badge bronze">🥉</span>`;
+
+        return `
+          <tr>
+            <td>${rankBadge}</td>
+            <td style="font-family:monospace;font-size:12.5px;font-weight:600;">${u.userId}</td>
+            <td style="text-align:right;font-weight:800;color:var(--success);font-family:'Outfit';font-size:15px;">${u.messageCount} msgs</td>
+          </tr>
+        `;
+      }).join('');
+    }
+  } catch (e) {}
+}
+
+let growthChartInstance = null;
+async function loadUserGrowthData() {
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/admin/stats/user-growth?days=30`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const stats = await r.json();
+      const labels = stats.map(s => s.date || s.DATE || '').reverse();
+      const counts = stats.map(s => s.count || s.COUNT || 0).reverse();
+
+      const canvas = document.getElementById('userGrowthChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (growthChartInstance) growthChartInstance.destroy();
+
+      growthChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'User đăng ký mới',
+            data: counts,
+            backgroundColor: 'rgba(6, 182, 212, 0.65)',
+            borderColor: '#06b6d4',
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#f3f4f6', font: { family: 'Outfit', weight: '700' } } }
+          },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } },
+            y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+    }
+  } catch (e) {}
+}
+
+let peakHoursChartInstance = null;
+async function loadPeakHoursData() {
+  try {
+    const r = await fetch(`${CHAT_URL}/api/admin/chat/stats/peak-hours`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const hoursMap = await r.json();
+      const labels = Array.from({length: 24}, (_, i) => `${i}h`);
+      const counts = Array.from({length: 24}, (_, i) => hoursMap[String(i)] || 0);
+
+      const canvas = document.getElementById('peakHoursChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (peakHoursChartInstance) peakHoursChartInstance.destroy();
+
+      peakHoursChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Số tin nhắn',
+            data: counts,
+            backgroundColor: 'rgba(139, 92, 246, 0.65)',
+            borderColor: '#8b5cf6',
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#f3f4f6', font: { family: 'Outfit', weight: '700' } } }
+          },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } },
+            y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+    }
+  } catch (e) {}
+}
+
+async function loadStorageStats() {
+  try {
+    const r = await fetch(`${CHAT_URL}/api/admin/chat/stats/storage`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const s = await r.json();
+      document.getElementById('valStorageStats').textContent = `${s.totalMessages || 0} msgs / ${s.totalMemes || 0} memes`;
+    }
+  } catch (e) {}
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = type;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  toast(`Đã chuyển sang giao diện ${next === 'light' ? 'Sáng (Light Mode)' : 'Tối (Cyber Dark)'}`, 'info');
+  window.soundFX.playTick();
+}
+
+(function initTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+</script>
+</body>
+</html>

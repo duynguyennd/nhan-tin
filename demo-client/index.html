@@ -1,0 +1,2562 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChatApp - Real-time 3D Messenger</title>
+<link rel="stylesheet" href="assets/css/style.css?v=3.6">
+<link rel="stylesheet" href="assets/css/chat.css?v=3.6">
+<!-- Three.js for 3D Cyber Background & Holographic Orb -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Canvas Confetti for Celebrations & Interactive Reactions -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<!-- Lucide Modern Icons -->
+<script src="https://cdn.jsdelivr.net/npm/lucide/dist/umd/lucide.min.js"></script>
+<!-- 3D Engine & Audio FX -->
+<script src="assets/js/effects-3d.js?v=3.6"></script>
+</head>
+<body>
+
+<!-- 3D Interactive Canvas Background will be automatically mounted by effects-3d.js -->
+
+<!-- ── AUTH SCREEN WITH 3D ORB SHOWCASE ── -->
+<div id="authScreen">
+  <div class="auth-container-3d">
+    <!-- Left: 3D Holographic Orb Showcase -->
+    <div class="auth-showcase">
+      <div id="authOrbContainer"></div>
+      <h2 class="auth-showcase-title">Real-Time Messenger</h2>
+      <p class="auth-showcase-desc">Nền tảng nhắn tin thời gian thực thế hệ mới với kiến trúc Mini-Microservices, WebSocket, Cassandra & Redis Pub/Sub.</p>
+      <div class="auth-feature-pills">
+        <div class="auth-pill"><i data-lucide="zap" style="width: 14px; height: 14px;"></i> WebSocket 0ms</div>
+        <div class="auth-pill"><i data-lucide="shield-check" style="width: 14px; height: 14px;"></i> JWT Security</div>
+        <div class="auth-pill"><i data-lucide="database" style="width: 14px; height: 14px;"></i> Cassandra Cluster</div>
+        <div class="auth-pill"><i data-lucide="camera" style="width: 14px; height: 14px;"></i> AR AI Meme</div>
+      </div>
+    </div>
+
+    <!-- Right: 3D Card Tilt Auth Form -->
+    <div class="auth-card tilt-card">
+      <div class="auth-logo">
+        <div class="icon"><i data-lucide="message-square" style="width: 26px; height: 26px; color: #fff;"></i></div>
+        <div>
+          <h1>ChatApp</h1>
+          <p>Hệ thống nhắn tin thời gian thực</p>
+        </div>
+      </div>
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchTab('login')">Đăng nhập</div>
+        <div class="auth-tab" onclick="switchTab('register')">Đăng ký</div>
+      </div>
+      <div class="auth-error" id="authError">
+        <i data-lucide="alert-circle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+        <span id="authErrorText"></span>
+      </div>
+
+      <div id="loginForm">
+        <div class="form-group">
+          <label>Tên đăng nhập / Email</label>
+          <input id="loginUsername" type="text" placeholder="username" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label>Mật khẩu</label>
+          <div style="position: relative; width: 100%;">
+            <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password"
+                   onkeydown="if(event.key==='Enter')doLogin()" style="padding-right: 42px;">
+            <button type="button" class="btn-pw-toggle" onclick="togglePasswordVisibility('loginPassword', this)" title="Ẩn/Hiện mật khẩu" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; padding: 4px;">
+              <i data-lucide="eye" style="width: 18px; height: 18px;"></i>
+            </button>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="doLogin()" id="btnLogin">
+          <i data-lucide="log-in" style="width: 18px; height: 18px;"></i>
+          <span>Đăng nhập</span>
+        </button>
+      </div>
+
+      <div id="registerForm" style="display:none">
+        <div class="form-group">
+          <label>Tên đăng nhập</label>
+          <input id="regUsername" type="text" placeholder="3–50 ký tự">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input id="regEmail" type="email" placeholder="email@example.com">
+        </div>
+        <div class="form-group">
+          <label>Mật khẩu</label>
+          <div style="position: relative; width: 100%;">
+            <input id="regPassword" type="password" placeholder="Tối thiểu 6 ký tự"
+                   onkeydown="if(event.key==='Enter')doRegister()" style="padding-right: 42px;">
+            <button type="button" class="btn-pw-toggle" onclick="togglePasswordVisibility('regPassword', this)" title="Ẩn/Hiện mật khẩu" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; padding: 4px;">
+              <i data-lucide="eye" style="width: 18px; height: 18px;"></i>
+            </button>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="doRegister()" id="btnRegister">
+          <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
+          <span>Tạo tài khoản</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN APP SCREEN ── -->
+<div id="appScreen">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="logo-icon"><i data-lucide="message-square" style="width: 20px; height: 20px; color: #fff;"></i></div>
+        <h2>ChatApp</h2>
+      </div>
+      <button class="btn-sound-toggle" id="btnSoundToggle" onclick="toggleSoundFX()" title="Bật/Tắt hiệu ứng âm thanh">
+        <div class="sound-bars">
+          <div class="sound-bar"></div>
+          <div class="sound-bar"></div>
+          <div class="sound-bar"></div>
+          <div class="sound-bar"></div>
+        </div>
+        <span id="soundLabel" style="font-size: 11px; font-weight: 700;">SFX 3D</span>
+      </button>
+    </div>
+
+    <!-- User Profile Badge with Quick Controls -->
+    <div class="user-badge">
+      <div class="avatar" id="myAvatar" onclick="openProfileModal()" style="cursor: pointer;" title="Xem & sửa thông tin cá nhân">?</div>
+      <div class="user-info" onclick="openProfileModal()" style="cursor: pointer;" title="Xem & sửa thông tin cá nhân">
+        <div class="uname" id="myUsername">—</div>
+        <div class="status" id="wsStatusText">Đang kết nối...</div>
+      </div>
+      <button class="btn-icon" onclick="toggleTheme()" title="Đổi Giao diện Dark/Light"><i data-lucide="sun-moon" style="width: 18px; height: 18px;"></i></button>
+      <button class="btn-icon" id="btnAdminPanel" onclick="openAdminPanel()" title="Trang quản trị Admin" style="display: none; color: var(--accent2);"><i data-lucide="shield" style="width: 18px; height: 18px;"></i></button>
+      <button class="btn-icon" onclick="openMemeManager()" title="Quản lý kho Meme"><i data-lucide="smile" style="width: 18px; height: 18px;"></i></button>
+      <button class="btn-icon" onclick="logout()" title="Đăng xuất" style="color: var(--error);"><i data-lucide="log-out" style="width: 18px; height: 18px;"></i></button>
+    </div>
+
+    <!-- Conversation Search Bar -->
+    <div class="sidebar-search-box">
+      <div style="position: relative;">
+        <i data-lucide="search" style="position: absolute; left: 10px; top: 9px; width: 14px; height: 14px; color: var(--text-muted);"></i>
+        <input type="text" id="convSearchInput" class="sidebar-search-input" placeholder="Tìm kiếm hội thoại..." oninput="filterConversations()">
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <span>Hội thoại</span>
+      <button class="btn-new" onclick="openNewChatModal()"><i data-lucide="plus" style="width: 13px; height: 13px;"></i> Tạo mới</button>
+    </div>
+
+    <!-- Conversation List -->
+    <div class="conversation-list" id="convList">
+      <div style="text-align:center;color:var(--text-muted);padding:32px 16px;font-size:13px;">
+        <i data-lucide="loader-2" style="width: 24px; height: 24px; margin-bottom: 8px; animation: spin 1s linear infinite;"></i>
+        <div>Đang tải cuộc trò chuyện...</div>
+      </div>
+    </div>
+
+    <div class="ws-status">
+      <div class="ws-dot" id="wsDot"></div>
+      <span id="wsStatusLabel">Chưa kết nối</span>
+    </div>
+  </div>
+
+  <!-- Chat View Area -->
+  <div class="main">
+    <div id="chatHeader" class="chat-header" style="display:none">
+      <div class="avatar" id="chatAvatar">?</div>
+      <div class="hinfo">
+        <div class="hname" id="chatName">—</div>
+        <div class="hstatus">Direct message</div>
+      </div>
+      
+      <!-- AI Copilot Hub Button & Dropdown -->
+      <div style="position: relative;">
+        <button class="btn-ai-header" id="btnAiHeader" onclick="toggleAiMenu(event)" title="Trợ lý AI Copilot">
+          <i data-lucide="bot" style="width: 16px; height: 16px; color: var(--accent);"></i>
+          <span>AI Copilot</span>
+          <i data-lucide="chevron-down" style="width: 13px; height: 13px; opacity: 0.8;"></i>
+        </button>
+        <div class="ai-menu-dropdown" id="aiMenuDropdown">
+          <button class="ai-menu-item" onclick="openAiSummarizeModal()">
+            <i data-lucide="file-text" style="width: 16px; height: 16px;"></i>
+            <span>Tóm tắt hội thoại</span>
+          </button>
+          <button class="ai-menu-item" onclick="openAiImagineModal()">
+            <i data-lucide="palette" style="width: 16px; height: 16px;"></i>
+            <span>Sinh ảnh AI (/imagine)</span>
+          </button>
+          <button class="ai-menu-item" onclick="toggleAutoTranslate()">
+            <i data-lucide="globe" style="width: 16px; height: 16px;"></i>
+            <span id="autoTransLabel">Tự động dịch (TẮT)</span>
+          </button>
+          <button class="ai-menu-item" onclick="openAiDirectChat()">
+            <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+            <span>Chat 1-1 với AI</span>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn-ar-cam" onclick="openARCamera()" title="AR Meme Matching">
+        <i data-lucide="sparkles" style="width: 15px; height: 15px;"></i>
+        <span>AR Camera</span>
+      </button>
+    </div>
+
+    <div class="no-chat" id="noChat">
+      <div id="noChatCompanion" title="Hologram AI Companion (Di chuột tương tác 3D)"></div>
+      <div class="no-chat-title">Không gian hội thoại thời gian thực</div>
+      <p class="no-chat-subtitle">Chọn một cuộc trò chuyện từ danh sách bên trái hoặc tạo mới để kết nối mạng lưới microservices.</p>
+      <div class="no-chat-suggestions">
+        <div class="suggestion-chip" onclick="openAiDirectChat()"><i data-lucide="bot" style="width: 13px; height: 13px; color: var(--accent);"></i> Chat với Gemini AI Copilot</div>
+        <div class="suggestion-chip" onclick="openNewChatModal()"><i data-lucide="plus" style="width: 13px; height: 13px;"></i> Bắt đầu trò chuyện mới</div>
+        <div class="suggestion-chip" onclick="openARCamera()"><i data-lucide="camera" style="width: 13px; height: 13px;"></i> Thử nghiệm AR Meme AI</div>
+        <div class="suggestion-chip" onclick="openMemeManager()"><i data-lucide="smile" style="width: 13px; height: 13px;"></i> Kho Meme đối chiếu</div>
+      </div>
+    </div>
+
+    <div class="messages-area" id="messagesArea" style="display:none"></div>
+
+    <div class="typing-indicator" id="typingIndicator" style="display:none">
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+      <span id="typingText">đang nhập tin nhắn...</span>
+    </div>
+
+    <div class="input-area" id="inputArea" style="display:none; flex-direction: column; gap: 8px;">
+      <!-- Smart Reply Chips Bar -->
+      <div id="smartReplyBar" class="smart-reply-bar" style="display: none;">
+        <div class="smart-reply-label"><i data-lucide="zap" style="width: 12px; height: 12px;"></i> Smart Reply:</div>
+        <div id="smartReplyChipsContainer" style="display: flex; gap: 6px; overflow-x: auto; flex: 1;"></div>
+        <button class="smart-reply-btn" onclick="refreshSmartReplies()" title="Làm mới gợi ý"><i data-lucide="rotate-cw" style="width: 13px; height: 13px;"></i></button>
+        <button class="smart-reply-btn" onclick="hideSmartReplyBar()" title="Đóng gợi ý"><i data-lucide="x" style="width: 13px; height: 13px;"></i></button>
+      </div>
+
+      <!-- Reply Preview Bar -->
+      <div id="replyPreviewBar">
+        <div>
+          <span style="font-size: 11px; color: var(--accent); font-weight: 800; text-transform: uppercase;">Đang trả lời: </span>
+          <span id="replyPreviewTarget" style="font-size: 13px; color: var(--text);"></span>
+        </div>
+        <button onclick="cancelReplyTarget()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px;">✕</button>
+      </div>
+
+      <!-- Quick Emoji Reaction Bar (Integrated above input) -->
+      <div id="quickEmojiBar" style="display: flex; gap: 8px; width: 100%; padding: 0 4px; overflow-x: auto;">
+        <button class="btn-action" onclick="insertEmoji('😀')" style="background:var(--surface2);padding:4px 8px;font-size:15px;cursor:pointer;">😀</button>
+        <button class="btn-action" onclick="insertEmoji('😂')" style="background:var(--surface2);padding:4px 8px;font-size:15px;cursor:pointer;">😂</button>
+        <button class="btn-action" onclick="insertEmoji('❤️')" style="background:var(--surface2);padding:4px 8px;font-size:15px;cursor:pointer;">❤️</button>
+        <button class="btn-action" onclick="insertEmoji('🔥')" style="background:var(--surface2);padding:4px 8px;font-size:15px;cursor:pointer;">🔥</button>
+        <button class="btn-action" onclick="insertEmoji('👍')" style="background:var(--surface2);padding:4px 8px;font-size:15px;cursor:pointer;">👍</button>
+        <button class="btn-action" onclick="insertEmoji('🎉')" style="background:var(--surface2);padding:4px 8px;font-size:15px;cursor:pointer;">🎉</button>
+        <button class="btn-action" onclick="insertEmoji('🚀')" style="background:var(--surface2);padding:4px 8px;font-size:15px;cursor:pointer;">🚀</button>
+        <button class="btn-action" onclick="insertEmoji('✨')" style="background:var(--surface2);padding:4px 8px;font-size:15px;cursor:pointer;">✨</button>
+      </div>
+
+      <!-- Message Controls Row -->
+      <div style="display: flex; align-items: center; gap: 10px; width: 100%; position: relative;">
+        <!-- AI Tone Wand Button & Popover -->
+        <button class="btn-ai-wand" id="btnAiWand" onclick="toggleTonePopover(event)" title="AI Magic Wand: Hiệu chỉnh văn phong">
+          <i data-lucide="wand-2" style="width: 18px; height: 18px;"></i>
+        </button>
+        <div class="ai-tone-popover" id="aiTonePopover">
+          <div class="ai-tone-popover-title">✨ AI Tone Polisher</div>
+          <button class="tone-option-btn" onclick="applyTone('PROFESSIONAL')">👔 Chuyên nghiệp & Chuẩn mực</button>
+          <button class="tone-option-btn" onclick="applyTone('POLITE')">🤝 Lịch sự & Tinh tế</button>
+          <button class="tone-option-btn" onclick="applyTone('CONCISE')">🚀 Ngắn gọn & Súc tích</button>
+          <button class="tone-option-btn" onclick="applyTone('CASUAL')">😄 Thân mật & Hài hước</button>
+        </div>
+
+        <input type="file" id="chatFileInput" style="display: none;" onchange="uploadChatFile(event)" accept="image/*,video/*,audio/*,application/pdf">
+        <button class="btn-media" onclick="document.getElementById('chatFileInput').click()" title="Đính kèm file / hình ảnh">
+          <i data-lucide="paperclip" style="width: 20px; height: 20px;"></i>
+        </button>
+        <div class="input-wrapper">
+          <textarea id="msgInput" placeholder="Nhập tin nhắn... (Gõ @AI để hỏi Copilot, Enter gửi, Shift+Enter xuống dòng)" rows="1"></textarea>
+        </div>
+        <button class="btn-send" id="btnSend" onclick="sendMessage()" disabled title="Gửi tin nhắn">
+          <i data-lucide="send" style="width: 18px; height: 18px; color: #fff;"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── NEW CHAT MODAL ── -->
+<div class="modal-overlay" id="newChatModal">
+  <div class="modal tilt-card">
+    <h3>Cuộc trò chuyện mới</h3>
+    <div class="modal-tabs">
+      <div class="modal-tab active" id="tabDirectBtn" onclick="switchModalTab('direct')">Chat 1-1</div>
+      <div class="modal-tab" id="tabGroupBtn" onclick="switchModalTab('group')">Tạo Chat Nhóm</div>
+    </div>
+
+    <!-- DIRECT TAB -->
+    <div id="modalDirectSection">
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label>Tìm kiếm người dùng</label>
+        <input id="userSearchInput" type="text" placeholder="Nhập tên người dùng hoặc email..." oninput="filterUserList()">
+      </div>
+      <div class="user-select-list" id="userSelectList">
+        <div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">Đang tải danh sách người dùng...</div>
+      </div>
+      <div class="form-group" style="margin-top:14px; margin-bottom:10px;">
+        <label style="font-size:11px;">Hoặc kết nối trực tiếp qua User ID (UUID)</label>
+        <input id="newChatUserId" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">Hủy</button>
+        <button class="btn-primary" onclick="createConversation()">Kết nối ID</button>
+      </div>
+    </div>
+
+    <!-- GROUP TAB -->
+    <div id="modalGroupSection" style="display:none">
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label>Tên nhóm chat</label>
+        <input id="groupNameInput" type="text" placeholder="Nhập tên nhóm (ví dụ: Dev Team, Dự án 2026...)">
+      </div>
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label>Ảnh đại diện nhóm (tùy chọn)</label>
+        <input type="file" id="groupAvatarInput" accept="image/*" style="padding: 8px 12px; font-size: 13px; cursor: pointer;">
+      </div>
+      <div class="form-group" style="margin-bottom: 10px;">
+        <label>Chọn thành viên tham gia</label>
+        <div class="user-select-list" id="groupUserSelectList">
+          <div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">Đang tải danh sách thành viên...</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">Hủy</button>
+        <button class="btn-primary" onclick="doCreateGroupConversation()">Tạo nhóm ngay</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── USER PROFILE MODAL ── -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal tilt-card">
+    <h3>Thông tin tài khoản</h3>
+    <p>Xem và cập nhật thông tin cá nhân của bạn trên hệ thống.</p>
+    <div class="form-group">
+      <label>TÊN NGƯỜI DÙNG (USERNAME)</label>
+      <input id="profileUsernameInput" type="text" placeholder="Username...">
+    </div>
+    <div class="form-group">
+      <label>ĐỊA CHỈ EMAIL</label>
+      <input id="profileEmailInput" type="email" placeholder="Email...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeProfileModal()">Đóng</button>
+      <button class="btn-primary" onclick="saveProfile()">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── AR CAMERA MODAL (AI EMOTION MATCHING) ── -->
+<div class="modal-overlay" id="arCameraModal">
+  <div class="modal tilt-card" style="width: 880px; max-width: 95%;">
+    <h3>AR Meme Matching Camera</h3>
+    <p style="margin-bottom: 18px;">Nhận diện cảm xúc khuôn mặt thời gian thực bằng mô hình AI và đối chiếu Meme tương thích.</p>
+    
+    <div class="ar-container" style="display: flex; gap: 20px; align-items: center; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
+      <div class="video-box" style="position: relative; width: 400px; height: 300px; background: #000; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-strong);">
+        <video id="webcam" width="400" height="300" autoplay muted playsinline style="transform: scaleX(-1); object-fit: cover; width: 400px; height: 300px;"></video>
+        <canvas id="faceCanvas" width="400" height="300" style="position: absolute; top: 0; left: 0; transform: scaleX(-1); width: 400px; height: 300px;"></canvas>
+        <div class="ar-hud-overlay">
+          <div class="ar-hud-corner tl"></div>
+          <div class="ar-hud-corner tr"></div>
+          <div class="ar-hud-corner bl"></div>
+          <div class="ar-hud-corner br"></div>
+          <div class="ar-scanline"></div>
+        </div>
+        <div id="arCameraStatus" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.75); color: #fff; font-size: 13px; padding: 12px; text-align: center; backdrop-filter: blur(4px);">Đang khởi chạy camera...</div>
+      </div>
+      
+      <div class="meme-box" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; width: 400px; height: 300px; background: var(--surface2); border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); overflow-y: auto; padding: 12px; position: relative;">
+        <div id="memeLoadingStatus" style="color: var(--text-muted); font-size: 13px; font-weight: 600; margin: auto;">Chờ nhận diện cảm xúc...</div>
+        <div id="matchedMemeLabel" style="display: none; font-weight: 800; font-size: 14px; color: var(--accent); font-family: 'Outfit', sans-serif; margin-bottom: 8px;">Biểu cảm: HAPPY (98%)</div>
+        <img id="matchedMemeImg" style="display: none; max-width: 100%; height: 140px; object-fit: contain; border-radius: var(--radius-sm); margin-bottom: 12px;">
+        <div id="memeSuggestionsBox" style="width: 100%; display: none;">
+          <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.05em; font-family: 'Outfit';">Grid Meme gợi ý theo cảm xúc:</div>
+          <div id="memeSuggestionsGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%;"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-actions" style="justify-content: flex-end;">
+      <button class="btn-secondary" style="max-width: 120px;" onclick="closeARCamera()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MEME MANAGER MODAL ── -->
+<div class="modal-overlay" id="memeManagerModal">
+  <div class="modal tilt-card" style="width: 640px; max-width: 95%;">
+    <h3>Quản lý kho ảnh Meme</h3>
+    <p style="margin-bottom: 18px;">Thêm mới hoặc quản lý Meme được đối chiếu với AI camera.</p>
+    
+    <div style="background: var(--surface2); border: 1px solid var(--border-strong); padding: 16px; border-radius: var(--radius-lg); margin-bottom: 20px;">
+      <h4 style="margin-bottom: 12px; font-size: 14px; font-family: 'Outfit', sans-serif;">Thêm Meme mới vào cơ sở dữ liệu</h4>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <input id="newMemeUrl" type="text" placeholder="Dán URL hình ảnh Meme..." style="flex: 2; min-width: 200px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-size: 13px;">
+        <select id="newMemeEmotion" style="flex: 1; min-width: 120px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-size: 13px;">
+          <option value="HAPPY">HAPPY (Vui)</option>
+          <option value="SAD">SAD (Buồn)</option>
+          <option value="ANGRY">ANGRY (Giận)</option>
+          <option value="SURPRISED">SURPRISED (Ngạc nhiên)</option>
+          <option value="FEARFUL">FEARFUL (Lo sợ)</option>
+          <option value="NEUTRAL">NEUTRAL (Bình thường)</option>
+        </select>
+        <button class="btn-primary" style="width: auto; padding: 10px 20px; font-size: 13px;" onclick="addMeme()">Thêm</button>
+      </div>
+    </div>
+    
+    <div style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 12px; background: var(--surface2);">
+      <div id="memeListLoading" style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 13px;">Đang tải danh sách Meme...</div>
+      <div id="memeGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; display: none;"></div>
+    </div>
+    
+    <div class="modal-actions" style="justify-content: flex-end; margin-top: 16px;">
+      <button class="btn-secondary" style="max-width: 120px;" onclick="closeMemeManager()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── AI SUMMARIZE MODAL ── -->
+<div class="modal-overlay" id="aiSummarizeModal">
+  <div class="modal tilt-card" style="width: 720px; max-width: 95%;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+      <h3 style="display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="sparkles" style="width: 20px; height: 20px; color: var(--accent);"></i>
+        <span>Tóm tắt Hội thoại bằng AI</span>
+      </h3>
+      <span id="aiSummaryConfidenceBadge" style="background: rgba(16, 185, 129, 0.2); border: 1px solid var(--success); color: var(--success); padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; font-family: 'Outfit';">Độ tin cậy: 99.4%</span>
+    </div>
+    <p style="margin-bottom: 18px;">Hệ thống AI tự động phân tích ngữ cảnh tin nhắn gần đây để trích xuất trọng tâm và đầu việc cần làm.</p>
+
+    <div id="aiSummarizeLoading" style="text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px;">
+      <i data-lucide="loader-2" style="width: 32px; height: 32px; margin-bottom: 12px; animation: spin 1s linear infinite; color: var(--accent);"></i>
+      <div>Gemini AI Copilot đang đọc và phân tích toàn bộ hội thoại...</div>
+    </div>
+
+    <div id="aiSummarizeContent" style="display: none;">
+      <div class="ai-summary-grid">
+        <!-- Topic & Summary Box -->
+        <div class="ai-summary-block">
+          <h4><i data-lucide="tag" style="width: 14px; height: 14px;"></i> Chủ đề thảo luận chính</h4>
+          <div id="aiSummaryTopicText" style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; font-family: 'Outfit';">—</div>
+          <div id="aiSummaryMainText" style="font-size: 13.5px; color: var(--text-muted); line-height: 1.6;">—</div>
+        </div>
+
+        <!-- Key Points -->
+        <div class="ai-summary-block">
+          <h4><i data-lucide="check-circle-2" style="width: 14px; height: 14px;"></i> Điểm thống nhất & Mấu chốt</h4>
+          <ul class="ai-bullet-list" id="aiSummaryKeyPointsList"></ul>
+        </div>
+
+        <!-- Action Items (Interactive Todo) -->
+        <div class="ai-summary-block">
+          <h4><i data-lucide="list-todo" style="width: 14px; height: 14px;"></i> Danh sách việc cần làm (Action Items)</h4>
+          <div style="display: flex; flex-direction: column; gap: 8px;" id="aiSummaryActionItemsList"></div>
+        </div>
+
+        <!-- Meta info -->
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--text-muted); padding: 4px 6px;">
+          <div><i data-lucide="message-square" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i> Đã phân tích: <strong id="aiSummaryMsgCount" style="color: #fff;">0</strong> tin nhắn</div>
+          <div><i data-lucide="activity" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i> Trạng thái tâm lý: <strong id="aiSummarySentiment" style="color: var(--accent);">Tích cực</strong></div>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="justify-content: space-between; margin-top: 14px;">
+        <button class="btn-secondary" style="max-width: 120px;" onclick="closeAiSummarizeModal()">Đóng</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-secondary" onclick="copyAiSummary()"><i data-lucide="copy" style="width: 14px; height: 14px;"></i> Sao chép</button>
+          <button class="btn-primary" onclick="shareAiSummaryToChat()"><i data-lucide="send" style="width: 14px; height: 14px;"></i> Gửi vào Chat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── AI IMAGINE STUDIO MODAL ── -->
+<div class="modal-overlay" id="aiImagineModal">
+  <div class="modal tilt-card" style="width: 720px; max-width: 95%;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+      <h3 style="display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="palette" style="width: 20px; height: 20px; color: var(--accent2);"></i>
+        <span>Studio Sinh ảnh AI (/imagine)</span>
+      </h3>
+      <span style="background: rgba(139, 92, 246, 0.2); border: 1px solid var(--accent2); color: var(--accent2-light); padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; font-family: 'Outfit';">Neural Art Engine</span>
+    </div>
+    <p style="margin-bottom: 16px;">Tạo tác phẩm nghệ thuật kỹ thuật số theo phong cách Cyberpunk, 3D Render hoặc Anime để chia sẻ ngay vào chat.</p>
+
+    <!-- Style Selector -->
+    <div style="margin-bottom: 12px;">
+      <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Outfit'; margin-bottom: 6px; display: block;">Chọn phong cách nghệ thuật:</label>
+      <div class="imagine-style-grid">
+        <div class="imagine-style-card active" onclick="selectImagineStyle('CYBERPUNK', this)">🌌 Cyberpunk 2077</div>
+        <div class="imagine-style-card" onclick="selectImagineStyle('3D_RENDER', this)">🔮 3D Hologram</div>
+        <div class="imagine-style-card" onclick="selectImagineStyle('ANIME', this)">🌸 Anime & Manga</div>
+        <div class="imagine-style-card" onclick="selectImagineStyle('PIXEL_ART', this)">👾 Retro Pixel</div>
+        <div class="imagine-style-card" onclick="selectImagineStyle('REALISTIC', this)">📸 Photorealistic</div>
+      </div>
+    </div>
+
+    <!-- Prompt Input -->
+    <div class="form-group" style="margin-bottom: 12px;">
+      <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Outfit';">Mô tả bức ảnh bạn muốn tạo (Prompt):</label>
+      <div style="display: flex; gap: 8px;">
+        <input id="aiImaginePromptInput" type="text" placeholder="Ví dụ: Futuristic Neon Cyber City, Floating Hologram Companion..." style="flex: 1;" onkeydown="if(event.key==='Enter')generateAiImage()">
+        <button class="btn-primary" style="width: auto; padding: 10px 18px; font-size: 13px;" onclick="generateAiImage()" id="btnGenerateImage">
+          <i data-lucide="sparkles" style="width: 15px; height: 15px;"></i>
+          <span>Sinh ảnh</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick suggestions pills -->
+    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;">
+      <span style="font-size: 11px; color: var(--text-muted); padding: 4px 0;">Gợi ý:</span>
+      <button class="suggestion-chip" onclick="setImaginePrompt('Futuristic AI Hacker Space in Neon Blue and Violet')">Cyber Space</button>
+      <button class="suggestion-chip" onclick="setImaginePrompt('Cute 3D Hologram Robot Pet smiling happily')">3D Robot Pet</button>
+      <button class="suggestion-chip" onclick="setImaginePrompt('Tokyo Cyberpunk Street at night with rain reflections')">Neon Tokyo</button>
+      <button class="suggestion-chip" onclick="setImaginePrompt('Abstract Quantum Data Stream with glowing light beams')">Quantum Data</button>
+    </div>
+
+    <!-- Preview Canvas/Image Area -->
+    <div class="imagine-preview-box" id="imaginePreviewBox">
+      <div id="imaginePlaceholder" style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px;">
+        <i data-lucide="image" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
+        <div>Nhập mô tả và nhấn "Sinh ảnh" để xem tác phẩm</div>
+      </div>
+      <img id="imaginePreviewImg" class="imagine-preview-img" style="display: none;" alt="AI Generated Image">
+      <div id="imagineLoadingOverlay" style="position: absolute; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; color: #fff; font-size: 13px; gap: 10px;">
+        <i data-lucide="loader-2" style="width: 24px; height: 24px; animation: spin 1s linear infinite; color: var(--accent);"></i>
+        <span>Đang kết xuất tác phẩm AI...</span>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="justify-content: space-between;">
+      <button class="btn-secondary" style="max-width: 120px;" onclick="closeAiImagineModal()">Đóng</button>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-secondary" id="btnDownloadImage" style="display: none;" onclick="downloadAiImage()"><i data-lucide="download" style="width: 14px; height: 14px;"></i> Tải về</button>
+        <button class="btn-primary" id="btnSendImageToChat" style="display: none;" onclick="sendAiImageToChat()"><i data-lucide="send" style="width: 14px; height: 14px;"></i> Gửi vào Chat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ── JAVASCRIPT LOGIC ── -->
+<script>
+const AUTH_URL = window.location.protocol === 'file:' ? 'http://localhost:8081' : window.location.origin;
+const CHAT_URL = window.location.protocol === 'file:' ? 'http://localhost:8082' : window.location.origin;
+const WS_URL   = window.location.protocol === 'file:' ? 'ws://localhost:8083/ws' : ((window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws');
+
+let token = null, myId = null, myName = null;
+let oldestMessageId = null;
+let ws = null, currentConvId = null, conversations = [];
+let pingTimer = null;
+let userCache = {};
+let allUsers = [];
+let processedMessageIds = new Set();
+let onlineUserIds = new Set();
+let unreadCounts = {};
+let typingDebounceTimer = null;
+let selectedGroupUserIds = new Set();
+let pendingMediaUrls = [];
+
+// ── AI COPILOT & SMART FEATURES ─────────────────────────────────────────────
+const AI_BOT_ID = '00000000-0000-0000-0000-0000000000a1';
+let autoTranslateEnabled = false;
+let currentImagineStyle = 'CYBERPUNK';
+let currentGeneratedImageUrl = null;
+let currentAiSummaryData = null;
+let currentSmartReplies = [];
+
+// Header Menu Toggler
+function toggleAiMenu(e) {
+  if (e) e.stopPropagation();
+  const dropdown = document.getElementById('aiMenuDropdown');
+  dropdown.classList.toggle('show');
+  window.soundFX.playTick();
+}
+
+// Tone Popover Toggler
+function toggleTonePopover(e) {
+  if (e) e.stopPropagation();
+  const popover = document.getElementById('aiTonePopover');
+  popover.classList.toggle('show');
+  window.soundFX.playTick();
+}
+
+// Tone Rewriter
+async function applyTone(tone) {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text) {
+    toast('Vui lòng nhập nội dung nháp vào ô chat trước khi chỉnh văn phong!', 'info');
+    document.getElementById('aiTonePopover').classList.remove('show');
+    return;
+  }
+  
+  toast('AI đang hiệu chỉnh văn phong...', 'info');
+  document.getElementById('aiTonePopover').classList.remove('show');
+  try {
+    const r = await fetch(`${CHAT_URL}/api/ai/rewrite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ text, tone })
+    });
+    if (r.ok) {
+      const data = await r.json();
+      input.value = data.rewrittenText;
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+      document.getElementById('btnSend').disabled = false;
+      toast(`Đã chuyển văn phong sang: ${tone}`, 'success');
+      window.soundFX.playSuccess();
+      if (window.Effects3D) window.Effects3D.triggerConfetti();
+    } else {
+      toast('Hiệu chỉnh văn phong thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối AI Tone Polisher', 'error');
+  }
+}
+
+// Auto-Translate Toggle
+function toggleAutoTranslate() {
+  autoTranslateEnabled = !autoTranslateEnabled;
+  document.getElementById('autoTransLabel').textContent = `Tự động dịch (${autoTranslateEnabled ? 'BẬT' : 'TẮT'})`;
+  toast(`Chế độ tự động dịch tin nhắn: ${autoTranslateEnabled ? 'BẬT (ON)' : 'TẮT (OFF)'}`, 'info');
+  document.getElementById('aiMenuDropdown').classList.remove('show');
+  window.soundFX.playTick();
+}
+
+// Direct Chat with AI Copilot
+async function openAiDirectChat() {
+  document.getElementById('aiMenuDropdown').classList.remove('show');
+  let aiConv = conversations.find(c => c.id === 'conv_ai_copilot' || (c.memberIds && c.memberIds.includes(AI_BOT_ID)));
+  if (aiConv) {
+    selectConversation(aiConv.id, '✨ Gemini AI Copilot', AI_BOT_ID, 'DIRECT');
+  } else {
+    await createConversationWith(AI_BOT_ID);
+  }
+}
+
+// AI Summarize Modal Handlers
+async function openAiSummarizeModal() {
+  document.getElementById('aiMenuDropdown').classList.remove('show');
+  if (!currentConvId) {
+    toast('Vui lòng chọn một cuộc trò chuyện để tóm tắt!', 'error');
+    return;
+  }
+  const modal = document.getElementById('aiSummarizeModal');
+  modal.classList.add('show');
+  document.getElementById('aiSummarizeLoading').style.display = 'block';
+  document.getElementById('aiSummarizeContent').style.display = 'none';
+  window.soundFX.playTick();
+
+  try {
+    const r = await fetch(`${CHAT_URL}/api/ai/summarize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ conversationId: currentConvId })
+    });
+    if (r.ok) {
+      const data = await r.json();
+      currentAiSummaryData = data;
+      renderAiSummary(data);
+      document.getElementById('aiSummarizeLoading').style.display = 'none';
+      document.getElementById('aiSummarizeContent').style.display = 'block';
+      window.soundFX.playSuccess();
+    } else {
+      toast('Không thể tải bản tóm tắt AI!', 'error');
+      closeAiSummarizeModal();
+    }
+  } catch (e) {
+    toast('Lỗi kết nối tóm tắt AI', 'error');
+    closeAiSummarizeModal();
+  }
+}
+
+function renderAiSummary(data) {
+  document.getElementById('aiSummaryTopicText').textContent = data.topic;
+  document.getElementById('aiSummaryMainText').textContent = data.summary;
+  document.getElementById('aiSummaryMsgCount').textContent = data.messageCount;
+  document.getElementById('aiSummarySentiment').textContent = data.sentiment;
+  if (data.confidence) {
+    document.getElementById('aiSummaryConfidenceBadge').textContent = `Độ tin cậy: ${data.confidence}%`;
+  }
+
+  // Key points
+  const pointsList = document.getElementById('aiSummaryKeyPointsList');
+  pointsList.innerHTML = (data.keyPoints || []).map(p => `
+    <li class="ai-bullet-item">
+      <i data-lucide="check-circle-2" style="width: 14px; height: 14px;"></i>
+      <span>${escHtml(p)}</span>
+    </li>
+  `).join('');
+
+  // Action items (interactive checkboxes)
+  const actionsList = document.getElementById('aiSummaryActionItemsList');
+  actionsList.innerHTML = (data.actionItems || []).map((item, idx) => `
+    <label class="ai-action-item">
+      <input type="checkbox" id="action_chk_${idx}">
+      <span style="flex:1;">${escHtml(item)}</span>
+    </label>
+  `).join('');
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeAiSummarizeModal() {
+  document.getElementById('aiSummarizeModal').classList.remove('show');
+}
+
+function copyAiSummary() {
+  if (!currentAiSummaryData) return;
+  const text = `📌 CHỦ ĐỀ: ${currentAiSummaryData.topic}\n\n📝 TÓM TẮT:\n${currentAiSummaryData.summary}\n\n🔑 ĐIỂM NỔI BẬT:\n${(currentAiSummaryData.keyPoints || []).map(p => '• ' + p).join('\n')}\n\n📋 VIỆC CẦN LÀM:\n${(currentAiSummaryData.actionItems || []).map(a => '□ ' + a).join('\n')}`;
+  navigator.clipboard.writeText(text);
+  toast('Đã sao chép toàn bộ bản tóm tắt AI!', 'success');
+  window.soundFX.playPop();
+}
+
+function shareAiSummaryToChat() {
+  if (!currentAiSummaryData || !currentConvId) return;
+  const msgContent = `📋 **[BẢN TÓM TẮT HỘI THOẠI BỞI GEMINI AI COPILOT]**\n\n📌 **Chủ đề:** ${currentAiSummaryData.topic}\n\n📝 **Tóm tắt:** ${currentAiSummaryData.summary}\n\n🔑 **Điểm chính:**\n${(currentAiSummaryData.keyPoints || []).map(p => '• ' + p).join('\n')}\n\n✅ **Việc cần làm:**\n${(currentAiSummaryData.actionItems || []).map(a => '• ' + a).join('\n')}`;
+  
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify({
+      type: 'CHAT',
+      conversationId: currentConvId,
+      content: msgContent,
+      mediaUrls: []
+    }));
+    toast('Đã chia sẻ bản tóm tắt vào phòng chat!', 'success');
+    closeAiSummarizeModal();
+    window.soundFX.playSend();
+  }
+}
+
+// AI Imagine Studio Handlers
+function openAiImagineModal() {
+  document.getElementById('aiMenuDropdown').classList.remove('show');
+  document.getElementById('aiImagineModal').classList.add('show');
+  document.getElementById('aiImaginePromptInput').value = '';
+  document.getElementById('imaginePlaceholder').style.display = 'block';
+  document.getElementById('imaginePreviewImg').style.display = 'none';
+  document.getElementById('btnDownloadImage').style.display = 'none';
+  document.getElementById('btnSendImageToChat').style.display = 'none';
+  window.soundFX.playTick();
+}
+
+function closeAiImagineModal() {
+  document.getElementById('aiImagineModal').classList.remove('show');
+}
+
+function selectImagineStyle(style, el) {
+  currentImagineStyle = style;
+  document.querySelectorAll('.imagine-style-card').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  window.soundFX.playTick();
+}
+
+function setImaginePrompt(prompt) {
+  const input = document.getElementById('aiImaginePromptInput');
+  input.value = prompt;
+  input.focus();
+  window.soundFX.playTick();
+}
+
+async function generateAiImage() {
+  const prompt = document.getElementById('aiImaginePromptInput').value.trim();
+  if (!prompt) {
+    toast('Vui lòng nhập mô tả ảnh!', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btnGenerateImage');
+  btn.disabled = true;
+  document.getElementById('imagineLoadingOverlay').style.display = 'flex';
+  window.soundFX.playTick();
+
+  try {
+    const r = await fetch(`${CHAT_URL}/api/ai/imagine`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ prompt, style: currentImagineStyle })
+    });
+    if (r.ok) {
+      const data = await r.json();
+      currentGeneratedImageUrl = data.imageUrl;
+      const img = document.getElementById('imaginePreviewImg');
+      img.src = data.imageUrl;
+      img.style.display = 'block';
+      document.getElementById('imaginePlaceholder').style.display = 'none';
+      document.getElementById('btnDownloadImage').style.display = 'inline-flex';
+      document.getElementById('btnSendImageToChat').style.display = 'inline-flex';
+      toast('Tác phẩm AI đã được kết xuất thành công!', 'success');
+      window.soundFX.playSuccess();
+      if (window.Effects3D) window.Effects3D.triggerConfetti();
+    } else {
+      toast('Sinh ảnh AI thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối Studio sinh ảnh AI', 'error');
+  } finally {
+    btn.disabled = false;
+    document.getElementById('imagineLoadingOverlay').style.display = 'none';
+  }
+}
+
+function sendAiImageToChat() {
+  if (!currentGeneratedImageUrl || !currentConvId) return;
+  const prompt = document.getElementById('aiImaginePromptInput').value.trim();
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify({
+      type: 'CHAT',
+      conversationId: currentConvId,
+      content: `🎨 [Tác phẩm AI]: ${prompt}`,
+      mediaUrls: [currentGeneratedImageUrl]
+    }));
+    toast('Đã gửi tác phẩm AI vào phòng chat!', 'success');
+    closeAiImagineModal();
+    window.soundFX.playSend();
+  }
+}
+
+function downloadAiImage() {
+  if (!currentGeneratedImageUrl) return;
+  window.open(currentGeneratedImageUrl, '_blank');
+  toast('Đang mở ảnh độ nét cao...', 'info');
+}
+
+// Live Message Translation
+async function translateMessageBubble(messageId) {
+  const bubble = document.getElementById(`msg-bubble-${messageId}`);
+  if (!bubble) return;
+  const transCard = document.getElementById(`trans-${messageId}`);
+  if (!transCard) return;
+
+  if (transCard.style.display === 'block') {
+    transCard.style.display = 'none';
+    return;
+  }
+
+  const textContentEl = bubble.querySelector('.msg-text-content');
+  const text = textContentEl ? textContentEl.innerText : '';
+  if (!text) return;
+
+  transCard.style.display = 'block';
+  transCard.innerHTML = `<div style="font-size:11px;color:var(--text-muted);"><i data-lucide="loader-2" style="width:12px;height:12px;animation:spin 1s linear infinite;display:inline-block;vertical-align:middle;"></i> Đang dịch bằng AI...</div>`;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+
+  try {
+    const r = await fetch(`${CHAT_URL}/api/ai/translate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ text, targetLang: 'vi' })
+    });
+    if (r.ok) {
+      const data = await r.json();
+      transCard.innerHTML = `
+        <div class="msg-translation-header">
+          <span>🌐 Bản dịch AI (${(data.sourceLang || 'en').toUpperCase()} ➔ VI)</span>
+          <button onclick="document.getElementById('trans-${messageId}').style.display='none'" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;">✕</button>
+        </div>
+        <div>${escHtml(data.translatedText)}</div>
+      `;
+      window.soundFX.playPop();
+    } else {
+      transCard.innerHTML = `<span style="color:var(--error);">Không thể dịch tin nhắn</span>`;
+    }
+  } catch (e) {
+    transCard.innerHTML = `<span style="color:var(--error);">Lỗi kết nối dịch thuật</span>`;
+  }
+}
+
+// Smart Reply Suggestions Logic
+async function fetchSmartReplies(lastMsg) {
+  if (!currentConvId || !lastMsg) return;
+  try {
+    const r = await fetch(`${CHAT_URL}/api/ai/smart-replies`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ conversationId: currentConvId, lastMessage: lastMsg })
+    });
+    if (r.ok) {
+      const data = await r.json();
+      currentSmartReplies = data.replies || [];
+      renderSmartReplyBar(currentSmartReplies);
+    }
+  } catch (e) {}
+}
+
+function renderSmartReplyBar(replies) {
+  const bar = document.getElementById('smartReplyBar');
+  const container = document.getElementById('smartReplyChipsContainer');
+  if (!bar || !container) return;
+
+  if (!replies || replies.length === 0) {
+    bar.style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = replies.map(r => `
+    <button class="smart-reply-chip" onclick="applySmartReply('${escJs(r)}')">
+      <span>${escHtml(r)}</span>
+    </button>
+  `).join('');
+
+  bar.style.display = 'flex';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function applySmartReply(replyText) {
+  const input = document.getElementById('msgInput');
+  input.value = replyText;
+  input.focus();
+  document.getElementById('btnSend').disabled = false;
+  hideSmartReplyBar();
+  window.soundFX.playPop();
+}
+
+function refreshSmartReplies() {
+  const area = document.getElementById('messagesArea');
+  const rows = area.querySelectorAll('.msg-row.other .msg-text-content');
+  const lastRow = rows.length > 0 ? rows[rows.length - 1] : null;
+  const lastMsg = lastRow ? lastRow.innerText : 'Chào bạn!';
+  fetchSmartReplies(lastMsg);
+  window.soundFX.playTick();
+}
+
+function hideSmartReplyBar() {
+  const bar = document.getElementById('smartReplyBar');
+  if (bar) bar.style.display = 'none';
+}
+
+// Markdown formatting for AI responses
+function formatAiMarkdown(text) {
+  if (!text) return '';
+  let html = escHtml(text);
+
+  // Format code blocks
+  html = html.replace(/```([a-zA-Z0-9]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+    const id = 'code_' + Math.random().toString(36).substring(2, 9);
+    return `<div class="chat-code-block">
+      <div class="chat-code-header">
+        <span>${lang ? escHtml(lang) : 'code'}</span>
+        <button class="chat-code-copy" onclick="copyCodeSnippet('${id}', this)">Copy Code</button>
+      </div>
+      <div class="chat-code-content" id="${id}">${code.trim()}</div>
+    </div>`;
+  });
+
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.1);padding:2px 5px;border-radius:4px;font-family:\'JetBrains Mono\';font-size:11.5px;color:var(--accent);">$1</code>');
+
+  // Headings
+  html = html.replace(/^### (.*$)/gim, '<div style="font-weight:800;font-size:14px;color:var(--accent);margin:6px 0 3px 0;font-family:\'Outfit\';">$1</div>');
+  html = html.replace(/^## (.*$)/gim, '<div style="font-weight:900;font-size:15px;color:var(--accent-light);margin:8px 0 4px 0;font-family:\'Outfit\';">$1</div>');
+
+  // Bold
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#fff;font-weight:700;">$1</strong>');
+
+  // Bullet items
+  html = html.replace(/^[•\-] (.*$)/gim, '<div style="display:flex;align-items:flex-start;gap:6px;margin:3px 0;"><span style="color:var(--accent);">•</span><span>$1</span></div>');
+
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+
+  return html;
+}
+
+function copyCodeSnippet(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.innerText || el.textContent);
+  btn.textContent = 'Copied! ✓';
+  btn.style.color = 'var(--success)';
+  setTimeout(() => {
+    btn.textContent = 'Copy Code';
+    btn.style.color = 'var(--accent)';
+  }, 2000);
+  window.soundFX.playPop();
+}
+
+// Global click listener to close popovers when clicking outside
+document.addEventListener('click', (e) => {
+  const aiMenu = document.getElementById('aiMenuDropdown');
+  const aiBtn = document.getElementById('btnAiHeader');
+  if (aiMenu && !aiMenu.contains(e.target) && !aiBtn?.contains(e.target)) {
+    aiMenu.classList.remove('show');
+  }
+
+  const tonePopover = document.getElementById('aiTonePopover');
+  const wandBtn = document.getElementById('btnAiWand');
+  if (tonePopover && !tonePopover.contains(e.target) && !wandBtn?.contains(e.target)) {
+    tonePopover.classList.remove('show');
+  }
+});
+
+// ── 3D Orb Initializer ────────────────────────────────────────────────────────
+let orbInstance = null;
+function init3DOrb() {
+  if (!orbInstance && window.Effects3D && document.getElementById('authOrbContainer')) {
+    orbInstance = new window.Effects3D.HolographicOrb3D('authOrbContainer');
+  }
+}
+
+// ── Sound Toggle Helper ───────────────────────────────────────────────────────
+function toggleSoundFX() {
+  const isEnabled = window.soundFX.toggle();
+  updateSoundButtonUI(isEnabled);
+  toast(`Âm thanh hiệu ứng: ${isEnabled ? 'Bật (ON)' : 'Tắt (MUTED)'}`, 'info');
+}
+
+function updateSoundButtonUI(isEnabled) {
+  const btn = document.getElementById('btnSoundToggle');
+  const label = document.getElementById('soundLabel');
+  if (!btn) return;
+  if (isEnabled) {
+    btn.classList.add('active');
+    if (label) label.textContent = 'SFX 3D (ON)';
+  } else {
+    btn.classList.remove('active');
+    if (label) label.textContent = 'SFX (MUTED)';
+  }
+}
+
+// ── 3D Empty Chat Companion Initializer ──
+let emptyCompanionInstance = null;
+function initEmptyCompanion() {
+  if (!emptyCompanionInstance && window.Effects3D && window.Effects3D.EmptyChatCompanion3D && document.getElementById('noChatCompanion')) {
+    emptyCompanionInstance = new window.Effects3D.EmptyChatCompanion3D('noChatCompanion');
+  }
+}
+
+function insertEmoji(emoji) {
+  const input = document.getElementById('msgInput');
+  input.value += emoji;
+  input.focus();
+  document.getElementById('btnSend').disabled = false;
+  window.soundFX.playPop();
+}
+
+// ── AR Meme Camera Logic ──────────────────────────────────────────────────────
+let arCameraStream = null;
+let arCameraLoopId = null;
+let modelsLoaded = false;
+let currentEmotion = null;
+let localMemeCache = [];
+
+async function openARCamera() {
+  const modal = document.getElementById('arCameraModal');
+  modal.classList.add('show');
+  document.getElementById('arCameraStatus').style.display = 'flex';
+  document.getElementById('arCameraStatus').textContent = 'Đang khởi chạy camera...';
+  document.getElementById('memeLoadingStatus').style.display = 'block';
+  document.getElementById('memeLoadingStatus').textContent = 'Chờ khởi chạy camera...';
+  document.getElementById('matchedMemeImg').style.display = 'none';
+  document.getElementById('matchedMemeLabel').style.display = 'none';
+
+  localMemeCache = [];
+  try {
+    const r = await fetch(`${CHAT_URL}/api/memes`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      localMemeCache = await r.json();
+    }
+  } catch (e) {
+    console.error("Lỗi tải cache Meme:", e);
+  }
+
+  try {
+    if (!modelsLoaded) {
+      document.getElementById('arCameraStatus').textContent = 'Đang tải thư viện AI...';
+      if (typeof faceapi === 'undefined') {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+      document.getElementById('arCameraStatus').textContent = 'Đang tải mô hình TinyFace AI...';
+      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+      modelsLoaded = true;
+    }
+
+    document.getElementById('arCameraStatus').textContent = 'Đang kết nối webcam...';
+    const video = document.getElementById('webcam');
+    arCameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 400, height: 300 } });
+    video.srcObject = arCameraStream;
+    
+    try {
+      await video.play();
+    } catch (playErr) {
+      console.warn("Lỗi auto-play:", playErr);
+    }
+
+    document.getElementById('arCameraStatus').style.display = 'none';
+    document.getElementById('memeLoadingStatus').textContent = 'Chờ nhận diện khuôn mặt...';
+    startARProcessing();
+
+  } catch (err) {
+    console.error('Lỗi AR Camera:', err);
+    document.getElementById('arCameraStatus').textContent = 'Lỗi camera: ' + err.message;
+    toast('Không thể mở camera. Vui lòng cấp quyền truy cập!', 'error');
+  }
+}
+
+function startARProcessing() {
+  const video = document.getElementById('webcam');
+  const canvas = document.getElementById('faceCanvas');
+  const ctx = canvas.getContext('2d');
+  const faceDetectorOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.25 });
+
+  async function detect() {
+    if (!arCameraStream || video.paused || video.ended) return;
+    
+    try {
+      const detections = await faceapi.detectSingleFace(video, faceDetectorOptions).withFaceExpressions();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (detections) {
+        document.getElementById('memeLoadingStatus').style.display = 'none';
+        const dims = faceapi.matchDimensions(canvas, video, true);
+        const resizedDetections = faceapi.resizeResults(detections, dims);
+        faceapi.draw.drawDetections(canvas, resizedDetections);
+        
+        const expressions = detections.expressions;
+        const targetEmotions = ['happy', 'sad', 'angry', 'surprised', 'fearful'];
+        let highestExpression = 'neutral';
+        let highestValue = expressions['neutral'] || 0;
+        let activeExpression = null;
+        let activeValue = 0.20;
+        
+        for (const expr of targetEmotions) {
+          const val = expressions[expr] || 0;
+          if (val > activeValue) {
+            activeValue = val;
+            activeExpression = expr;
+          }
+        }
+        
+        if (activeExpression) {
+          highestExpression = activeExpression;
+          highestValue = activeValue;
+        }
+        
+        let tag = 'NEUTRAL';
+        if (highestExpression === 'happy') tag = 'HAPPY';
+        else if (highestExpression === 'sad') tag = 'SAD';
+        else if (highestExpression === 'angry') tag = 'ANGRY';
+        else if (highestExpression === 'surprised') tag = 'SURPRISED';
+        else if (highestExpression === 'fearful') tag = 'FEARFUL';
+        
+        if (tag !== currentEmotion) {
+          currentEmotion = tag;
+          document.getElementById('matchedMemeLabel').style.display = 'block';
+          document.getElementById('matchedMemeLabel').textContent = `Biểu cảm: ${tag} (${Math.round(highestValue * 100)}%)`;
+          fetchMemeForEmotion(tag);
+        }
+      } else {
+        document.getElementById('memeLoadingStatus').style.display = 'block';
+        document.getElementById('memeLoadingStatus').textContent = 'Không tìm thấy khuôn mặt...';
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    
+    if (arCameraStream) {
+      arCameraLoopId = requestAnimationFrame(detect);
+    }
+  }
+  
+  arCameraLoopId = requestAnimationFrame(detect);
+}
+
+function fetchMemeForEmotion(tag) {
+  if (!localMemeCache || localMemeCache.length === 0) return;
+  const matching = localMemeCache.filter(m => m.emotion === tag);
+  const img = document.getElementById('matchedMemeImg');
+  const suggBox = document.getElementById('memeSuggestionsBox');
+  const suggGrid = document.getElementById('memeSuggestionsGrid');
+  
+  if (matching.length > 0) {
+    const randomMeme = matching[0];
+    img.src = randomMeme.url;
+    img.style.display = 'block';
+    
+    if (suggBox && suggGrid) {
+      suggBox.style.display = 'block';
+      suggGrid.innerHTML = matching.slice(0, 3).map(m => `
+        <div style="border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; background: var(--surface); cursor: pointer; text-align: center; box-shadow: var(--shadow-sm);">
+          <img src="${m.url}" style="width: 100%; height: 55px; object-fit: cover;" onerror="this.src='https://placehold.co/100?text=Meme'">
+          <div style="font-size: 9px; font-weight: 800; color: var(--accent); padding: 3px 2px; font-family: 'Outfit';">${m.emotion}</div>
+        </div>
+      `).join('');
+    }
+    window.soundFX.playPop();
+  } else {
+    img.style.display = 'none';
+    if (suggBox) suggBox.style.display = 'none';
+  }
+}
+
+function simulateARFaceDetection(emotion = 'HAPPY') {
+  const canvas = document.getElementById('faceCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  document.getElementById('arCameraStatus').style.display = 'none';
+  document.getElementById('memeLoadingStatus').style.display = 'none';
+  
+  const w = canvas.width, h = canvas.height;
+  ctx.fillStyle = '#070b19';
+  ctx.fillRect(0, 0, w, h);
+  
+  // Tech Grid
+  ctx.strokeStyle = 'rgba(0, 242, 254, 0.15)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += 25) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 25) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+  // User portrait representation
+  const cx = w / 2, cy = h / 2 - 10;
+  
+  // Shoulders / torso
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath();
+  ctx.ellipse(cx, h + 10, 110, 70, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Head
+  ctx.fillStyle = '#334155';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 65, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Happy Eyes (curved joyful eyes)
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(cx - 22, cy - 10, 8, Math.PI, 0, false);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx + 22, cy - 10, 8, Math.PI, 0, false);
+  ctx.stroke();
+
+  // Smile
+  ctx.strokeStyle = '#4ade80';
+  ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy + 12, 28, 0.15 * Math.PI, 0.85 * Math.PI, false);
+  ctx.stroke();
+
+  // AI Bounding Box in neon cyan
+  const bx = cx - 85, by = cy - 85, bw = 170, bh = 180;
+  ctx.strokeStyle = '#00f2fe';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(bx, by, bw, bh);
+
+  // Corner brackets (neon green)
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#4ade80';
+  const clen = 16;
+  ctx.beginPath(); ctx.moveTo(bx, by + clen); ctx.lineTo(bx, by); ctx.lineTo(bx + clen, by); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx + bw - clen, by); ctx.lineTo(bx + bw, by); ctx.lineTo(bx + bw, by + clen); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx, by + bh - clen); ctx.lineTo(bx, by + bh); ctx.lineTo(bx + clen, by + bh); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx + bw - clen, by + bh); ctx.lineTo(bx + bw, by + bh); ctx.lineTo(bx + bw, by + bh - clen); ctx.stroke();
+
+  // AI HUD Tag
+  ctx.fillStyle = 'rgba(6, 182, 212, 0.95)';
+  ctx.fillRect(bx, by - 26, 155, 24);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 11px Outfit, sans-serif';
+  ctx.fillText('FACE #1 | CONF: 98.4%', bx + 8, by - 9);
+
+  // Facial Landmarks
+  ctx.fillStyle = '#fbbf24';
+  const points = [
+    [cx - 22, cy - 10], [cx + 22, cy - 10], [cx, cy + 3],
+    [cx - 20, cy + 22], [cx, cy + 28], [cx + 20, cy + 22],
+    [cx - 40, cy - 15], [cx + 40, cy - 15], [cx - 30, cy + 45], [cx + 30, cy + 45]
+  ];
+  points.forEach(([px, py]) => {
+    ctx.beginPath();
+    ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Emotional classification meters in bottom HUD
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(10, h - 35, w - 20, 25);
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 10.5px "JetBrains Mono", monospace';
+  ctx.fillText('EMOTION: HAPPY (98.4%) | SURPRISED (1.2%) | NEUTRAL (0.4%)', 18, h - 18);
+
+  const label = document.getElementById('matchedMemeLabel');
+  label.style.display = 'block';
+  label.textContent = `Biểu cảm: ${emotion} (98.4%)`;
+  fetchMemeForEmotion(emotion);
+}
+
+function closeARCamera() {
+  document.getElementById('arCameraModal').classList.remove('show');
+  if (arCameraStream) {
+    arCameraStream.getTracks().forEach(track => track.stop());
+    arCameraStream = null;
+  }
+  if (arCameraLoopId) {
+    cancelAnimationFrame(arCameraLoopId);
+    arCameraLoopId = null;
+  }
+  const video = document.getElementById('webcam');
+  if (video) { video.pause(); video.srcObject = null; }
+  const canvas = document.getElementById('faceCanvas');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  currentEmotion = null;
+}
+
+// ── Meme Manager Logic ──────────────────────────────────────────────────────
+async function openMemeManager() {
+  const modal = document.getElementById('memeManagerModal');
+  modal.classList.add('show');
+  document.getElementById('memeListLoading').style.display = 'block';
+  document.getElementById('memeGrid').style.display = 'none';
+  document.getElementById('newMemeUrl').value = '';
+  await fetchAllMemes();
+}
+
+async function fetchAllMemes() {
+  try {
+    const r = await fetch(`${CHAT_URL}/api/memes`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const memes = await r.json();
+      const grid = document.getElementById('memeGrid');
+      grid.innerHTML = '';
+      
+      if (memes.length === 0) {
+        document.getElementById('memeListLoading').style.display = 'block';
+        document.getElementById('memeListLoading').textContent = 'Chưa có Meme nào trong kho.';
+        return;
+      }
+      
+      memes.forEach(m => {
+        const item = document.createElement('div');
+        item.style.cssText = 'border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface); overflow: hidden; display: flex; flex-direction: column; position: relative; box-shadow: var(--shadow-sm);';
+        item.innerHTML = `
+          <img src="${m.url}" style="width: 100%; height: 90px; object-fit: cover;" onerror="this.src='https://placehold.co/150?text=Loi+anh'">
+          <div style="padding: 6px; font-size: 11px; font-weight: 800; color: var(--accent); text-align: center; text-transform: uppercase; font-family: 'Outfit';">${m.emotion}</div>
+          <button onclick="deleteMeme('${m.id}')" style="position: absolute; top: 4px; right: 4px; background: rgba(244, 63, 94, 0.9); color: #fff; border: none; border-radius: 6px; padding: 2px 6px; font-size: 10px; cursor: pointer;" title="Xóa Meme">🗑️</button>
+        `;
+        grid.appendChild(item);
+      });
+      
+      document.getElementById('memeListLoading').style.display = 'none';
+      grid.style.display = 'grid';
+    } else {
+      document.getElementById('memeListLoading').textContent = 'Lỗi không thể tải danh sách Meme.';
+    }
+  } catch (e) {
+    document.getElementById('memeListLoading').textContent = 'Lỗi kết nối API kho Meme.';
+  }
+}
+
+async function addMeme() {
+  const url = document.getElementById('newMemeUrl').value.trim();
+  const emotion = document.getElementById('newMemeEmotion').value;
+  if (!url) { toast('Vui lòng nhập URL ảnh Meme!', 'error'); return; }
+  
+  try {
+    const r = await fetch(`${CHAT_URL}/api/memes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ url, emotion })
+    });
+    if (r.ok) {
+      toast('Đã thêm Meme thành công vào CSDL!', 'success');
+      document.getElementById('newMemeUrl').value = '';
+      window.soundFX.playSuccess();
+      await fetchAllMemes();
+    } else {
+      toast('Thêm Meme thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối khi thêm Meme!', 'error');
+  }
+}
+
+async function deleteMeme(id) {
+  if (!confirm('Bạn có chắc chắn muốn xóa Meme này?')) return;
+  try {
+    const r = await fetch(`${CHAT_URL}/api/memes/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      toast('Đã xóa Meme thành công!', 'success');
+      await fetchAllMemes();
+    } else {
+      toast('Xóa Meme thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối khi xóa Meme!', 'error');
+  }
+}
+
+function closeMemeManager() {
+  document.getElementById('memeManagerModal').classList.remove('show');
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function showDesktopNotification(title, body) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '💬' });
+  }
+}
+
+function togglePasswordVisibility(id, btn) {
+  const input = document.getElementById(id);
+  if (!input) return;
+  const isPw = input.type === 'password';
+  input.type = isPw ? 'text' : 'password';
+  btn.innerHTML = `<i data-lucide="${isPw ? 'eye-off' : 'eye'}" style="width: 18px; height: 18px;"></i>`;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// ── Auth Logic ────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t, i) => {
+    t.classList.toggle('active', (tab === 'login') === (i === 0));
+  });
+  document.getElementById('loginForm').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? '' : 'none';
+  hideError();
+  window.soundFX.playTick();
+}
+
+function showError(msg) {
+  const el = document.getElementById('authError');
+  const txt = document.getElementById('authErrorText');
+  txt.textContent = msg;
+  el.classList.add('show');
+  window.soundFX.playAlert();
+}
+
+function hideError() {
+  document.getElementById('authError').classList.remove('show');
+}
+
+async function fetchUsers() {
+  try {
+    const r = await fetch(`${AUTH_URL}/api/users`);
+    if (r.ok) {
+      allUsers = await r.json();
+      allUsers.forEach(u => { userCache[u.id] = u; });
+    }
+  } catch (e) { console.error('Lỗi fetchUsers:', e); }
+}
+
+async function doLogin() {
+  const btn = document.getElementById('btnLogin');
+  if (btn.disabled) return;
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!username || !password) { showError('Vui lòng nhập đầy đủ thông tin'); return; }
+  btn.disabled = true; btn.querySelector('span').textContent = 'Đang xử lý...';
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usernameOrEmail: username, password })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.message || 'Đăng nhập thất bại');
+    await onAuthSuccess(data);
+  } catch (e) {
+    showError(e.message);
+  } finally {
+    btn.disabled = false; btn.querySelector('span').textContent = 'Đăng nhập';
+  }
+}
+
+async function doRegister() {
+  const btn = document.getElementById('btnRegister');
+  if (btn.disabled) return;
+  const username = document.getElementById('regUsername').value.trim();
+  const email    = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  if (!username || !email || !password) { showError('Vui lòng điền đầy đủ thông tin'); return; }
+  btn.disabled = true; btn.querySelector('span').textContent = 'Đang xử lý...';
+  try {
+    const r = await fetch(`${AUTH_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.message || Object.values(data.errors || {})[0] || 'Đăng ký thất bại');
+    await onAuthSuccess(data);
+    toast('Tạo tài khoản thành công!', 'success');
+  } catch (e) {
+    showError(e.message);
+  } finally {
+    btn.disabled = false; btn.querySelector('span').textContent = 'Tạo tài khoản';
+  }
+}
+
+async function onAuthSuccess(data) {
+  token  = data.accessToken;
+  myId   = data.userId;
+  myName = data.username;
+  let myRole = data.role || 'USER';
+  
+  localStorage.setItem('chat_token', token);
+  localStorage.setItem('chat_role', myRole);
+  localStorage.setItem('chat_username', myName);
+  localStorage.setItem('chat_my_id', myId);
+
+  userCache[myId] = { id: myId, username: myName };
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appScreen').classList.add('active');
+  document.getElementById('myAvatar').textContent = myName[0].toUpperCase();
+  document.getElementById('myUsername').textContent = myName;
+  
+  const btnAdmin = document.getElementById('btnAdminPanel');
+  if (btnAdmin) {
+    btnAdmin.style.display = myRole === 'ADMIN' ? 'inline-block' : 'none';
+  }
+
+  // Celebratory Confetti & Sound
+  if (window.Effects3D) {
+    window.Effects3D.triggerConfetti();
+  }
+  window.soundFX.playSuccess();
+
+  requestNotificationPermission();
+  await fetchUsers();
+  connectWS();
+  loadConversations();
+  setTimeout(initEmptyCompanion, 200);
+  
+  if (typeof lucide !== 'undefined') {
+    setTimeout(lucide.createIcons, 100);
+  }
+}
+
+function openAdminPanel() {
+  window.open('admin.html', '_blank');
+}
+
+function logout() {
+  if (ws) { ws.close(1000); ws = null; }
+  clearInterval(pingTimer);
+  token = myId = myName = null;
+  currentConvId = null; conversations = [];
+  processedMessageIds.clear();
+  onlineUserIds.clear();
+  unreadCounts = {};
+  
+  localStorage.removeItem('chat_token');
+  localStorage.removeItem('chat_role');
+  localStorage.removeItem('chat_username');
+  localStorage.removeItem('chat_my_id');
+
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('authScreen').style.display = 'flex';
+  ['loginUsername','loginPassword','regUsername','regEmail','regPassword'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+}
+
+function isTokenExpired(jwtToken) {
+  if (!jwtToken) return true;
+  try {
+    const parts = jwtToken.split('.');
+    if (parts.length !== 3) return true;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (!payload.exp) return false;
+    return (Date.now() >= payload.exp * 1000);
+  } catch (e) {
+    return true;
+  }
+}
+
+// ── WebSocket Gateway ─────────────────────────────────────────────────────────
+let wsReconnectAttempts = 0;
+function connectWS() {
+  if (!token || isTokenExpired(token)) {
+    logout();
+    showError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+    return;
+  }
+  setWSStatus('connecting', 'Đang kết nối...');
+  ws = new WebSocket(`${WS_URL}?token=${token}`);
+
+  ws.onopen = () => {
+    wsReconnectAttempts = 0;
+    setWSStatus('connecting', 'Đang kết nối...');
+  };
+
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'CONNECTED') {
+      wsReconnectAttempts = 0;
+      setWSStatus('connected', 'Đã kết nối');
+      document.getElementById('wsStatusText').textContent = 'Trực tuyến';
+      pingTimer = setInterval(() => { if (ws.readyState === 1) ws.send(JSON.stringify({type:'PING'})); }, 25000);
+    }
+    else if (msg.type === 'ONLINE_USERS') {
+      onlineUserIds = new Set(msg.userIds || []);
+      renderConvList();
+      if (document.getElementById('newChatModal').classList.contains('show')) renderUserSelectList();
+      updateChatHeaderPresence();
+    }
+    else if (msg.type === 'PRESENCE') {
+      if (msg.status === 'ONLINE') onlineUserIds.add(msg.userId);
+      else onlineUserIds.delete(msg.userId);
+      renderConvList();
+      if (document.getElementById('newChatModal').classList.contains('show')) renderUserSelectList();
+      updateChatHeaderPresence();
+    }
+    else if (msg.type === 'TYPING') {
+      onTypingEvent(msg);
+    }
+    else if (msg.type === 'MESSAGE') {
+      onIncomingMessage(msg);
+    }
+    else if (msg.type === 'SYSTEM_BROADCAST') {
+      showSystemBroadcast(msg);
+    }
+    else if (msg.type === 'REACTION') {
+      onIncomingReaction(msg);
+    }
+    else if (msg.type === 'RECALL') {
+      onIncomingRecall(msg);
+    }
+    else if (msg.type === 'CONVERSATION_CREATED' || msg.type === 'NEW_CONVERSATION') {
+      loadConversations();
+    }
+    else if (msg.type === 'ERROR') {
+      toast(msg.message, 'error');
+    }
+    else if (msg.type === 'PONG') {}
+  };
+
+  ws.onclose = (e) => {
+    setWSStatus('disconnected', 'Mất kết nối');
+    document.getElementById('wsStatusText').textContent = 'Ngoại tuyến';
+    if (e.code === 1000) return;
+    if (token && isTokenExpired(token)) {
+      logout();
+      showError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      return;
+    }
+    if (token) {
+      wsReconnectAttempts++;
+      if (wsReconnectAttempts > 5) {
+        console.warn('Đã thử kết nối WebSocket quá 5 lần. Dừng kết nối tự động.');
+        return;
+      }
+      setTimeout(() => { if (token && !isTokenExpired(token)) connectWS(); }, 4000);
+    }
+  };
+
+  ws.onerror = () => setWSStatus('disconnected', 'Lỗi kết nối');
+}
+
+function setWSStatus(state, label) {
+  const dot = document.getElementById('wsDot');
+  dot.className = 'ws-dot ' + state;
+  document.getElementById('wsStatusLabel').textContent = label;
+}
+
+// ── Typing Indicator ──────────────────────────────────────────────────────────
+function handleTypingInput() {
+  if (!currentConvId || !ws || ws.readyState !== 1) return;
+  ws.send(JSON.stringify({ type: 'TYPING', conversationId: currentConvId, isTyping: true }));
+  clearTimeout(typingDebounceTimer);
+  typingDebounceTimer = setTimeout(() => {
+    if (ws && ws.readyState === 1 && currentConvId) {
+      ws.send(JSON.stringify({ type: 'TYPING', conversationId: currentConvId, isTyping: false }));
+    }
+  }, 2000);
+}
+
+function onTypingEvent(msg) {
+  if (msg.conversationId === currentConvId && msg.userId !== myId) {
+    const indicator = document.getElementById('typingIndicator');
+    const textEl = document.getElementById('typingText');
+    if (msg.isTyping) {
+      const sender = userCache[msg.userId];
+      const name = sender ? sender.username : 'Bạn bè';
+      textEl.textContent = `${name} đang nhập tin nhắn...`;
+      indicator.style.display = 'flex';
+    } else {
+      indicator.style.display = 'none';
+    }
+  }
+}
+
+// ── Conversations ─────────────────────────────────────────────────────────────
+async function loadConversations() {
+  try {
+    await fetchUsers();
+    const r = await fetch(`${CHAT_URL}/api/conversations`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.status === 401) {
+      logout();
+      showError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      return;
+    }
+    if (!r.ok) {
+      console.warn('Không thể tải cuộc trò chuyện, HTTP status: ' + r.status);
+      return;
+    }
+    conversations = await r.json();
+    renderConvList();
+  } catch (e) { console.error('Lỗi loadConversations:', e); }
+}
+
+function filterConversations() {
+  renderConvList();
+}
+
+function renderConvList() {
+  const el = document.getElementById('convList');
+  const searchInput = document.getElementById('convSearchInput');
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+  if (!conversations.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:32px 16px;font-size:13px;">Chưa có cuộc trò chuyện nào</div>';
+    return;
+  }
+
+  const filtered = conversations.filter(c => {
+    const isGroup = c.type === 'GROUP';
+    const otherId = c.memberIds.find(id => id !== myId);
+    const partner = userCache[otherId];
+    const name = c.name || (partner ? partner.username : '');
+    return !query || name.toLowerCase().includes(query);
+  });
+
+  if (!filtered.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;font-size:13px;">Không tìm thấy hội thoại khớp</div>';
+    return;
+  }
+
+  el.innerHTML = filtered.map(c => {
+    const isGroup = c.type === 'GROUP';
+    const otherId = c.memberIds.find(id => id !== myId);
+    const partner = userCache[otherId];
+    const name = c.name || (partner ? partner.username : `User ${otherId ? otherId.substring(0,8) : ''}...`);
+    const isOnline = !isGroup && onlineUserIds.has(otherId);
+    const unread = unreadCounts[c.id] || 0;
+    const time = c.createdAt ? formatDate(new Date(c.createdAt)) : '';
+
+    let avatarHtml;
+    if (isGroup) {
+      if (c.avatarUrl) {
+        avatarHtml = `<img src="${escHtml(c.avatarUrl)}" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">`;
+      } else {
+        avatarHtml = '<i data-lucide="users" style="width: 18px; height: 18px;"></i>';
+      }
+    } else {
+      avatarHtml = name[0].toUpperCase();
+    }
+
+    return `<div class="conv-item ${c.id === currentConvId ? 'active' : ''}" onclick="selectConversation('${c.id}', '${escJs(name)}', '${otherId}', '${c.type}', '${c.avatarUrl || ''}')">
+      <div class="avatar-wrapper">
+        <div class="avatar">${avatarHtml}</div>
+        ${!isGroup ? `<div class="online-dot ${isOnline ? 'online' : 'offline'}" title="${isOnline ? 'Trực tuyến' : 'Ngoại tuyến'}"></div>` : ''}
+      </div>
+      <div class="cinfo">
+        <div class="cname">
+          <span>${escHtml(name)}</span>
+          ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
+        </div>
+        <div class="cpreview">${isGroup ? `👥 ${c.memberIds.length} thành viên` : 'Trò chuyện 1-1'}</div>
+      </div>
+      <div class="ctime">${time}</div>
+    </div>`;
+  }).join('');
+  
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+}
+
+async function selectConversation(convId, otherName, otherId, type = 'DIRECT', avatarUrl = '') {
+  currentConvId = convId;
+  unreadCounts[convId] = 0;
+  updateTabTitle();
+  renderConvList();
+  document.getElementById('noChat').style.display = 'none';
+  document.getElementById('chatHeader').style.display = 'flex';
+  document.getElementById('messagesArea').style.display = 'flex';
+  document.getElementById('inputArea').style.display = 'flex';
+  document.getElementById('chatName').textContent = otherName;
+  
+  const avatarEl = document.getElementById('chatAvatar');
+  if (type === 'GROUP') {
+    if (avatarUrl) {
+      avatarEl.innerHTML = `<img src="${escHtml(avatarUrl)}" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">`;
+    } else {
+      avatarEl.innerHTML = '<i data-lucide="users" style="width: 18px; height: 18px;"></i>';
+    }
+  } else {
+    avatarEl.innerHTML = '';
+    avatarEl.textContent = otherName[0].toUpperCase();
+  }
+  
+  document.getElementById('typingIndicator').style.display = 'none';
+  updateChatHeaderPresence(otherId, type);
+  document.getElementById('msgInput').focus();
+  window.soundFX.playTick();
+  await loadHistory(convId);
+  
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+}
+
+function updateChatHeaderPresence(targetId, type) {
+  if (!currentConvId) return;
+  const activeConv = conversations.find(c => c.id === currentConvId);
+  if (!activeConv) return;
+  const hstatus = document.querySelector('.chat-header .hstatus');
+  if (!hstatus) return;
+
+  if (activeConv.type === 'GROUP') {
+    hstatus.textContent = `👥 Chat Nhóm (${activeConv.memberIds.length} thành viên)`;
+    hstatus.style.color = 'var(--text-muted)';
+  } else {
+    const otherId = targetId || activeConv.memberIds.find(id => id !== myId);
+    const isOnline = onlineUserIds.has(otherId);
+    hstatus.textContent = isOnline ? '🟢 Trực tuyến' : '⚪ Ngoại tuyến';
+    hstatus.style.color = isOnline ? 'var(--success)' : 'var(--text-muted)';
+  }
+}
+
+async function loadHistory(convId) {
+  try {
+    const r = await fetch(`${CHAT_URL}/api/messages?conversationId=${convId}&size=50`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const msgs = await r.json();
+    const area = document.getElementById('messagesArea');
+    area.innerHTML = '';
+    processedMessageIds.clear();
+
+    if (msgs.length > 0) {
+      oldestMessageId = msgs[msgs.length - 1].messageId;
+      if (msgs.length === 50) {
+        showLoadMoreButton();
+      }
+    } else {
+      oldestMessageId = null;
+    }
+
+    [...msgs].reverse().forEach(m => appendMessage(m, false));
+    scrollToBottom();
+  } catch (e) { console.error(e); }
+}
+
+function showLoadMoreButton() {
+  const area = document.getElementById('messagesArea');
+  const btn = document.createElement('button');
+  btn.id = 'loadMoreBtn';
+  btn.className = 'load-more-btn';
+  btn.textContent = '↑ Tải tin nhắn cũ hơn';
+  btn.onclick = loadMoreMessages;
+  area.appendChild(btn);
+}
+
+async function loadMoreMessages() {
+  if (!currentConvId || !oldestMessageId) return;
+  const btn = document.getElementById('loadMoreBtn');
+  if (btn) btn.disabled = true;
+  try {
+    const r = await fetch(`${CHAT_URL}/api/messages?conversationId=${currentConvId}&before=${oldestMessageId}&size=50`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const msgs = await r.json();
+    if (msgs.length > 0) {
+      oldestMessageId = msgs[msgs.length - 1].messageId;
+      const area = document.getElementById('messagesArea');
+      if (btn) btn.remove();
+      if (msgs.length === 50) {
+        showLoadMoreButton();
+      }
+      const firstMessageEl = area.querySelector('.msg-row');
+      [...msgs].reverse().forEach(m => {
+        const msgEl = createMessageRow(m);
+        if (msgEl) {
+          if (firstMessageEl) {
+            area.insertBefore(msgEl, firstMessageEl);
+          } else {
+            area.appendChild(msgEl);
+          }
+        }
+      });
+    } else {
+      if (btn) btn.remove();
+      toast('Đã tải đến tin nhắn đầu tiên', 'info');
+    }
+  } catch (e) {
+    if (btn) btn.disabled = false;
+  }
+}
+
+const MAX_DOM_MESSAGES = 150;
+function capMessageDOM() {
+  const area = document.getElementById('messagesArea');
+  const messages = area.querySelectorAll('.msg-row');
+  if (messages.length > MAX_DOM_MESSAGES) {
+    const removeCount = messages.length - MAX_DOM_MESSAGES;
+    for (let i = 0; i < removeCount; i++) {
+      messages[i].remove();
+    }
+    if (!document.getElementById('loadMoreBtn')) {
+      showLoadMoreButton();
+    }
+  }
+}
+
+let scrollDebounceTimer;
+document.addEventListener('DOMContentLoaded', () => {
+  const area = document.getElementById('messagesArea');
+  if (area) {
+    area.addEventListener('scroll', () => {
+      clearTimeout(scrollDebounceTimer);
+      scrollDebounceTimer = setTimeout(() => {
+        if (area.scrollTop < 80 && oldestMessageId && !document.getElementById('loadMoreBtn')?.disabled) {
+           loadMoreMessages();
+        }
+      }, 300);
+    });
+  }
+});
+
+// ── Messages Handling ─────────────────────────────────────────────────────────
+function onIncomingMessage(msg) {
+  if (msg.conversationId === currentConvId) {
+    appendMessage(msg, true);
+    scrollToBottom();
+    capMessageDOM();
+    if (msg.senderId !== myId) {
+      window.soundFX.playReceive();
+      // Tự động tìm nạp gợi ý phản hồi thông minh (Smart Reply)
+      fetchSmartReplies(msg.content);
+      // Tự động dịch nếu bật chế độ Auto-Translate
+      if (autoTranslateEnabled && msg.senderId !== AI_BOT_ID) {
+        setTimeout(() => translateMessageBubble(msg.messageId), 300);
+      }
+    }
+  } else {
+    unreadCounts[msg.conversationId] = (unreadCounts[msg.conversationId] || 0) + 1;
+    updateTabTitle();
+    const sender = userCache[msg.senderId];
+    const senderName = sender ? sender.username : 'Bạn bè';
+    toast(`Tin nhắn mới từ ${senderName}: ${msg.content.substring(0,35)}`, 'info');
+    window.soundFX.playReceive();
+    showDesktopNotification(`Tin nhắn từ ${senderName}`, msg.content);
+    loadConversations();
+  }
+}
+
+let pendingReplyTarget = null;
+let messageReactionsCache = {};
+
+function setReplyTarget(messageId, senderName, content) {
+  pendingReplyTarget = { messageId, senderName, content };
+  document.getElementById('replyPreviewTarget').textContent = `${senderName}: "${content.substring(0, 50)}"`;
+  document.getElementById('replyPreviewBar').style.display = 'flex';
+  document.getElementById('msgInput').focus();
+  window.soundFX.playTick();
+}
+
+function cancelReplyTarget() {
+  pendingReplyTarget = null;
+  document.getElementById('replyPreviewBar').style.display = 'none';
+}
+
+async function addReaction(e, messageId, emoji) {
+  if (!currentConvId) return;
+  if (e && window.Effects3D) {
+    window.Effects3D.triggerReactionBurst(e, emoji);
+  }
+  window.soundFX.playPop();
+
+  try {
+    const r = await fetch(`${CHAT_URL}/api/messages/${messageId}/reactions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ conversationId: currentConvId, emoji })
+    });
+    if (!r.ok) toast('Thả reaction thất bại!', 'error');
+  } catch (e) {
+    toast('Lỗi kết nối thả reaction!', 'error');
+  }
+}
+
+async function recallMessage(messageId) {
+  if (!confirm('Bạn có chắc chắn muốn THU HỒI tin nhắn này?')) return;
+  if (!currentConvId) return;
+  try {
+    const r = await fetch(`${CHAT_URL}/api/messages/${messageId}?conversationId=${currentConvId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      toast('Đã thu hồi tin nhắn!', 'success');
+      window.soundFX.playPop();
+    } else {
+      const err = await r.json();
+      toast(err.message || 'Thu hồi thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối thu hồi tin nhắn!', 'error');
+  }
+}
+
+function onIncomingReaction(msg) {
+  const container = document.getElementById(`reactions-${msg.messageId}`);
+  if (!container) return;
+
+  if (!messageReactionsCache[msg.messageId]) {
+    messageReactionsCache[msg.messageId] = {};
+  }
+  const counts = messageReactionsCache[msg.messageId];
+  if (msg.emoji) {
+    counts[msg.emoji] = (counts[msg.emoji] || 0) + 1;
+  }
+  
+  const badgeHtml = Object.entries(counts)
+    .filter(([_, count]) => count > 0)
+    .map(([emoji, count]) => `<span class="reaction-badge" onclick="addReaction(event, '${msg.messageId}', '${emoji}')">${emoji} ${count}</span>`)
+    .join('');
+  container.innerHTML = badgeHtml;
+}
+
+function onIncomingRecall(msg) {
+  const bubble = document.getElementById(`msg-bubble-${msg.messageId}`);
+  if (bubble) {
+    bubble.innerHTML = '<span style="font-style:italic;color:var(--text-muted);"><i data-lucide="slash" style="width:14px;height:14px;display:inline-block;vertical-align:middle;"></i> Tin nhắn đã được thu hồi</span>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+}
+
+function createMessageRow(msg) {
+  if (msg.messageId) {
+    if (processedMessageIds.has(msg.messageId)) return null;
+    processedMessageIds.add(msg.messageId);
+  }
+  const isMine = msg.senderId === myId;
+  const isAiBot = msg.senderId === AI_BOT_ID;
+  const time = msg.createdAt ? formatTime(new Date(msg.createdAt)) : formatTime(new Date());
+  const tickHtml = isMine ? `<span style="font-size:11px;opacity:0.8;margin-left:4px;">${msg.status === 'DELIVERED' ? '✓✓' : '✓'}</span>` : '';
+
+  let mediaHtml = '';
+  if (msg.mediaUrls && msg.mediaUrls.length) {
+    mediaHtml = msg.mediaUrls.map(url => `<img src="${escHtml(url)}" class="msg-image" onclick="window.open('${escJs(url)}','_blank')">`).join('');
+  }
+
+  const senderName = isAiBot ? 'Gemini AI Copilot' : (userCache[msg.senderId] ? userCache[msg.senderId].username : 'Bạn bè');
+
+  const quoteHtml = msg.replyToContent ? `
+    <div class="quote-box">
+      <div class="quote-sender">↪ Trả lời ${escHtml(userCache[msg.replyToSenderId] ? userCache[msg.replyToSenderId].username : (msg.replyToSenderId === AI_BOT_ID ? 'Gemini AI Copilot' : 'thành viên'))}:</div>
+      <div>${escHtml(msg.replyToContent.substring(0, 80))}</div>
+    </div>` : '';
+
+  const actionsHtml = `
+    <div class="msg-actions-toolbar">
+      <button class="msg-action-btn" onclick="translateMessageBubble('${msg.messageId}')" title="Dịch tin nhắn bằng AI">🌐</button>
+      <button class="msg-action-btn" onclick="addReaction(event, '${msg.messageId}', '👍')" title="Thumbs Up">👍</button>
+      <button class="msg-action-btn" onclick="addReaction(event, '${msg.messageId}', '❤️')" title="Heart">❤️</button>
+      <button class="msg-action-btn" onclick="addReaction(event, '${msg.messageId}', '😂')" title="Joy">😂</button>
+      <button class="msg-action-btn" onclick="addReaction(event, '${msg.messageId}', '🔥')" title="Fire">🔥</button>
+      <button class="msg-action-btn" onclick="addReaction(event, '${msg.messageId}', '🎉')" title="Party">🎉</button>
+      <button class="msg-action-btn" onclick="setReplyTarget('${msg.messageId}', '${escJs(senderName)}', '${escJs(msg.content)}')" title="Trả lời">↩️</button>
+      ${isMine ? `<button class="msg-action-btn" onclick="recallMessage('${msg.messageId}')" title="Thu hồi tin nhắn" style="color:var(--error);">🗑️</button>` : ''}
+    </div>`;
+
+  const row = document.createElement('div');
+  row.className = `msg-row ${isMine ? 'mine' : 'other'} ${isAiBot ? 'ai-bot' : ''}`;
+  row.id = `msg-row-${msg.messageId}`;
+  row.innerHTML = `
+    ${actionsHtml}
+    <div class="msg-bubble" id="msg-bubble-${msg.messageId}">
+      ${isAiBot ? `<div class="ai-bot-badge"><i data-lucide="sparkles" style="width:11px;height:11px;"></i> Gemini AI Copilot</div>` : ''}
+      ${quoteHtml}
+      <div class="msg-text-content">${isAiBot ? formatAiMarkdown(msg.content) : escHtml(msg.content)}</div>
+      ${mediaHtml}
+      <div class="msg-translation-card" id="trans-${msg.messageId}" style="display: none;"></div>
+      <div class="reaction-badges" id="reactions-${msg.messageId}"></div>
+    </div>
+    <div class="msg-meta">${time} ${tickHtml}</div>
+  `;
+  return row;
+}
+
+function appendMessage(msg, animate = true) {
+  const row = createMessageRow(msg);
+  if (!row) return;
+  const area = document.getElementById('messagesArea');
+  area.appendChild(row);
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+}
+
+async function uploadChatFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  toast('Đang tải lên tập tin...', 'info');
+  try {
+    const r = await fetch(`${CHAT_URL}/api/files/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData
+    });
+    if (r.ok) {
+      const data = await r.json();
+      pendingMediaUrls.push(data.url);
+      toast('Tải lên hoàn tất! Nhấn gửi để chia sẻ.', 'success');
+      window.soundFX.playPop();
+      document.getElementById('btnSend').disabled = false;
+    } else {
+      const err = await r.json();
+      toast('Tải lên thất bại: ' + (err.error || ''), 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối tải file!', 'error');
+  }
+  event.target.value = '';
+}
+
+function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const content = input.value.trim();
+
+  if (!currentConvId) {
+    toast('Vui lòng chọn một cuộc trò chuyện!', 'error');
+    return;
+  }
+  if (!ws || ws.readyState !== 1) {
+    toast('Mất kết nối WebSocket. Vui lòng thử đăng nhập lại!', 'error');
+    return;
+  }
+  if (!content && !pendingMediaUrls.length) return;
+
+  const payload = {
+    type: 'CHAT',
+    conversationId: currentConvId,
+    content: content || '[Hình ảnh]',
+    mediaUrls: [...pendingMediaUrls]
+  };
+
+  if (pendingReplyTarget) {
+    payload.replyToId = pendingReplyTarget.messageId;
+  }
+
+  ws.send(JSON.stringify(payload));
+  window.soundFX.playSend();
+
+  pendingMediaUrls = [];
+  cancelReplyTarget();
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('btnSend').disabled = true;
+}
+
+// ── Modals & Dialogs ──────────────────────────────────────────────────────────
+async function openNewChatModal() {
+  document.getElementById('newChatModal').classList.add('show');
+  document.getElementById('userSearchInput').value = '';
+  document.getElementById('userSearchInput').focus();
+  selectedGroupUserIds.clear();
+  switchModalTab('direct');
+  window.soundFX.playTick();
+  await fetchUsers();
+  renderUserSelectList();
+}
+
+function closeModal() {
+  document.getElementById('newChatModal').classList.remove('show');
+  document.getElementById('newChatUserId').value = '';
+  document.getElementById('userSearchInput').value = '';
+  document.getElementById('groupNameInput').value = '';
+  selectedGroupUserIds.clear();
+}
+
+function switchModalTab(tab) {
+  document.getElementById('tabDirectBtn').classList.toggle('active', tab === 'direct');
+  document.getElementById('tabGroupBtn').classList.toggle('active', tab === 'group');
+  document.getElementById('modalDirectSection').style.display = tab === 'direct' ? 'block' : 'none';
+  document.getElementById('modalGroupSection').style.display = tab === 'group' ? 'block' : 'none';
+  window.soundFX.playTick();
+  if (tab === 'group') {
+    if (!allUsers || !allUsers.length) {
+      fetchUsers().then(() => renderGroupUserSelectList());
+    } else {
+      renderGroupUserSelectList();
+    }
+  }
+}
+
+function renderUserSelectList() {
+  const listEl = document.getElementById('userSelectList');
+  const query = document.getElementById('userSearchInput').value.toLowerCase().trim();
+  const filtered = allUsers.filter(u => u.id !== myId && (
+    !query || (u.username && u.username.toLowerCase().includes(query)) || (u.email && u.email.toLowerCase().includes(query))
+  ));
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">Không tìm thấy người dùng phù hợp</div>';
+    return;
+  }
+  listEl.innerHTML = filtered.map(u => {
+    const isOnline = onlineUserIds.has(u.id);
+    const initial = (u.username || 'U')[0].toUpperCase();
+    return `<div class="user-select-item" onclick="createConversationWith('${u.id}')">
+      <div class="avatar-wrapper">
+        <div class="uavatar">${initial}</div>
+        <div class="online-dot ${isOnline ? 'online' : 'offline'}"></div>
+      </div>
+      <div class="uinfo">
+        <div class="uname">${escHtml(u.username || u.id)} <span style="font-size:11px;font-weight:600;color:${isOnline ? 'var(--success)' : 'var(--text-muted)'}">(${isOnline ? 'Trực tuyến' : 'Ngoại tuyến'})</span></div>
+        <div class="uemail">${escHtml(u.email || '')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderGroupUserSelectList() {
+  const listEl = document.getElementById('groupUserSelectList');
+  const filtered = allUsers.filter(u => u.id !== myId);
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">Chưa có người dùng nào khác</div>';
+    return;
+  }
+  listEl.innerHTML = filtered.map(u => {
+    const isSelected = selectedGroupUserIds.has(u.id);
+    const initial = (u.username || 'U')[0].toUpperCase();
+    return `<div class="user-select-item" style="background:${isSelected ? 'rgba(6,182,212,0.15)' : ''}" onclick="toggleSelectGroupUser('${u.id}')">
+      <input type="checkbox" ${isSelected ? 'checked' : ''} style="margin-right:8px;pointer-events:none;">
+      <div class="uavatar">${initial}</div>
+      <div class="uinfo">
+        <div class="uname">${escHtml(u.username || u.id)}</div>
+        <div class="uemail">${escHtml(u.email || '')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSelectGroupUser(userId) {
+  if (selectedGroupUserIds.has(userId)) {
+    selectedGroupUserIds.delete(userId);
+  } else {
+    selectedGroupUserIds.add(userId);
+  }
+  window.soundFX.playTick();
+  renderGroupUserSelectList();
+}
+
+function filterUserList() {
+  renderUserSelectList();
+}
+
+async function createConversationWith(targetId) {
+  try {
+    const r = await fetch(`${CHAT_URL}/api/conversations/direct`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ targetUserId: targetId })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.message || 'Tạo cuộc trò chuyện thất bại');
+    closeModal();
+    await fetchUsers();
+    await loadConversations();
+    const otherId = (data.memberIds || []).find(id => String(id) !== String(myId)) || targetId;
+    const partner = userCache[otherId];
+    const otherName = partner ? partner.username : (data.name || `User ${otherId ? String(otherId).substring(0,8) : ''}...`);
+    selectConversation(data.id, otherName, otherId, data.type);
+    toast('Đã mở cuộc trò chuyện!', 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function doCreateGroupConversation() {
+  const btn = document.querySelector('#modalGroupSection .btn-primary');
+  if (btn && btn.disabled) return;
+  const groupName = document.getElementById('groupNameInput').value.trim();
+  if (!groupName) { toast('Vui lòng nhập tên nhóm chat!', 'error'); return; }
+  if (selectedGroupUserIds.size === 0) { toast('Chọn ít nhất 1 thành viên!', 'error'); return; }
+  
+  if (btn) { btn.disabled = true; btn.textContent = 'Đang xử lý...'; }
+
+  let avatarUrl = null;
+  const avatarInput = document.getElementById('groupAvatarInput');
+  if (avatarInput.files.length > 0) {
+    const file = avatarInput.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      toast('Đang tải lên ảnh đại diện nhóm...', 'info');
+      const uploadRes = await fetch(`${CHAT_URL}/api/files/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      if (uploadRes.ok) {
+        const data = await uploadRes.json();
+        avatarUrl = data.url;
+      }
+    } catch (e) {}
+  }
+
+  try {
+    const r = await fetch(`${CHAT_URL}/api/conversations/group`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name: groupName, avatarUrl: avatarUrl, memberUserIds: Array.from(selectedGroupUserIds) })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.message || 'Tạo nhóm chat thất bại');
+    closeModal();
+    await fetchUsers();
+    await loadConversations();
+    selectConversation(data.id, data.name, null, 'GROUP', avatarUrl);
+    toast(`Đã tạo nhóm chat "${data.name}"!`, 'success');
+    if (window.Effects3D) window.Effects3D.triggerConfetti();
+    window.soundFX.playSuccess();
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Tạo nhóm ngay'; }
+  }
+}
+
+async function createConversation() {
+  const targetId = document.getElementById('newChatUserId').value.trim();
+  if (!targetId) { toast('Vui lòng nhập User ID (UUID)', 'error'); return; }
+  await createConversationWith(targetId);
+}
+
+// ── Input & Typing Listeners ──────────────────────────────────────────────────
+document.getElementById('msgInput').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  document.getElementById('btnSend').disabled = !this.value.trim() && !pendingMediaUrls.length;
+  handleTypingInput();
+});
+document.getElementById('msgInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+// ── Helpers & Utils ───────────────────────────────────────────────────────────
+function scrollToBottom() {
+  const el = document.getElementById('messagesArea');
+  el.scrollTop = el.scrollHeight;
+}
+function formatTime(d) {
+  return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+}
+function formatDate(d) {
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return formatTime(d);
+  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escJs(s) {
+  return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = type;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+document.getElementById('newChatModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── System Broadcast ──────────────────────────────────────────────────────────
+function showSystemBroadcast(msg) {
+  let banner = document.getElementById('systemBroadcastBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'systemBroadcastBanner';
+    banner.style.cssText = `
+      position: fixed; top: 18px; left: 50%; transform: translateX(-50%) perspective(800px) rotateX(15deg);
+      z-index: 10000; padding: 14px 28px; border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-3d); font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; gap: 12px; transition: var(--transition);
+      backdrop-filter: blur(24px); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+    `;
+    document.body.appendChild(banner);
+  }
+  
+  const type = msg.broadcastType || 'INFO';
+  let bg = 'linear-gradient(135deg, #06b6d4, #8b5cf6)';
+  let icon = '📢';
+  if (type === 'WARNING') { bg = 'linear-gradient(135deg, #f59e0b, #d97706)'; icon = '⚠️'; }
+  else if (type === 'URGENT') { bg = 'linear-gradient(135deg, #f43f5e, #be123c)'; icon = '🚨'; }
+
+  banner.style.background = bg;
+  banner.innerHTML = `<span>${icon}</span> <span><strong>THÔNG BÁO HỆ THỐNG:</strong> ${escHtml(msg.message)}</span> <button onclick="this.parentElement.style.display='none'" style="background:none;border:none;color:#fff;cursor:pointer;font-size:16px;margin-left:14px;">✕</button>`;
+  banner.style.display = 'flex';
+  
+  requestAnimationFrame(() => {
+    banner.style.transform = 'translateX(-50%) perspective(800px) rotateX(0deg)';
+  });
+  
+  window.soundFX.playAlert();
+  if (window.Effects3D) window.Effects3D.triggerConfetti();
+
+  setTimeout(() => {
+    if (banner) banner.style.display = 'none';
+  }, 10000);
+}
+
+function updateTabTitle() {
+  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+  document.title = totalUnread > 0 ? `(${totalUnread}) ChatApp - Real-time Messenger` : 'ChatApp - Real-time Messenger';
+}
+
+// ── Theme Switcher ────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  toast(`Đã chuyển sang giao diện ${next === 'light' ? 'Sáng (Light Mode)' : 'Tối (Cyber Dark)'}`, 'info');
+  window.soundFX.playTick();
+}
+
+(function initTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+
+// ── Profile Modal Logic ───────────────────────────────────────────────────────
+async function openProfileModal() {
+  if (!myId) return;
+  try {
+    const r = await fetch(`${AUTH_URL}/api/users/${myId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const user = await r.json();
+      document.getElementById('profileUsernameInput').value = user.username || '';
+      document.getElementById('profileEmailInput').value = user.email || '';
+      document.getElementById('profileModal').classList.add('show');
+      window.soundFX.playTick();
+    }
+  } catch (e) {
+    toast('Lỗi kết nối tải thông tin cá nhân!', 'error');
+  }
+}
+
+function closeProfileModal() {
+  document.getElementById('profileModal').classList.remove('show');
+}
+
+async function saveProfile() {
+  const username = document.getElementById('profileUsernameInput').value.trim();
+  const email = document.getElementById('profileEmailInput').value.trim();
+  if (!username || !email) { toast('Vui lòng điền đủ thông tin!', 'error'); return; }
+
+  try {
+    const r = await fetch(`${AUTH_URL}/api/users/${myId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ username, email })
+    });
+    if (r.ok) {
+      const updated = await r.json();
+      myName = updated.username;
+      localStorage.setItem('chat_username', myName);
+      document.getElementById('myUsername').textContent = myName;
+      document.getElementById('myAvatar').textContent = myName[0].toUpperCase();
+      closeProfileModal();
+      toast('Cập nhật thông tin thành công!', 'success');
+      window.soundFX.playSuccess();
+    } else {
+      const err = await r.json();
+      toast(err.message || 'Cập nhật thất bại!', 'error');
+    }
+  } catch (e) {
+    toast('Lỗi kết nối lưu profile!', 'error');
+  }
+}
+
+// Auto-check saved session on page load
+window.addEventListener('DOMContentLoaded', () => {
+  init3DOrb();
+  updateSoundButtonUI(window.soundFX.enabled);
+
+  const savedToken = localStorage.getItem('chat_token');
+  const savedId = localStorage.getItem('chat_my_id');
+  const savedUsername = localStorage.getItem('chat_username');
+  const savedRole = localStorage.getItem('chat_role');
+
+  if (savedToken && savedId && savedUsername) {
+    if (isTokenExpired(savedToken)) {
+      logout();
+      showError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      setTimeout(initEmptyCompanion, 300);
+    } else {
+      onAuthSuccess({
+        accessToken: savedToken,
+        userId: savedId,
+        username: savedUsername,
+        role: savedRole
+      });
+    }
+  } else {
+    setTimeout(initEmptyCompanion, 300);
+  }
+
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+});
+</script>
+</body>
+</html>

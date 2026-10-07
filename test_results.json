@@ -1,0 +1,184 @@
+﻿{
+    "passed":  22,
+    "cases":  [
+                  {
+                      "ID":  "TC-01",
+                      "Group":  "Health Check",
+                      "Name":  "auth-service health check (port 8081)",
+                      "Status":  "FAIL",
+                      "Detail":  "The remote server returned an error: (404) Not Found."
+                  },
+                  {
+                      "ID":  "TC-02",
+                      "Group":  "Health Check",
+                      "Name":  "chat-service health check (port 8082)",
+                      "Status":  "FAIL",
+                      "Detail":  "The remote server returned an error: (401) Unauthorized."
+                  },
+                  {
+                      "ID":  "TC-03",
+                      "Group":  "Health Check",
+                      "Name":  "ws-gateway health check (port 8083)",
+                      "Status":  "FAIL",
+                      "Detail":  "The remote server returned an error: (404) Not Found."
+                  },
+                  {
+                      "ID":  "TC-04",
+                      "Group":  "Dang Ky",
+                      "Name":  "Dang ky tai khoan Alice",
+                      "Status":  "PASS",
+                      "Detail":  "UserId: cc63632e-df14-46dd-abfa-5ebf304e4569, Token: eyJhbGciOiJIUzI1NiJ9..."
+                  },
+                  {
+                      "ID":  "TC-05",
+                      "Group":  "Dang Ky",
+                      "Name":  "Dang ky tai khoan Bob",
+                      "Status":  "PASS",
+                      "Detail":  "UserId: 403f2f1c-1328-4240-8a28-730843d6517d, Token: eyJhbGciOiJIUzI1NiJ9..."
+                  },
+                  {
+                      "ID":  "TC-06",
+                      "Group":  "Dang Ky",
+                      "Name":  "Dang ky tai khoan Charlie",
+                      "Status":  "PASS",
+                      "Detail":  "UserId: 144be344-3cdd-4611-b914-f05a45549747"
+                  },
+                  {
+                      "ID":  "TC-07",
+                      "Group":  "Dang Ky",
+                      "Name":  "Bat loi dang ky trung Username",
+                      "Status":  "PASS",
+                      "Detail":  "HTTP 409 - Dung: tu choi trung username"
+                  },
+                  {
+                      "ID":  "TC-08",
+                      "Group":  "Dang Nhap",
+                      "Name":  "Dang nhap thanh cong",
+                      "Status":  "PASS",
+                      "Detail":  "Login OK, Token: eyJhbGciOiJIUzI1NiJ9..."
+                  },
+                  {
+                      "ID":  "TC-09",
+                      "Group":  "Dang Nhap",
+                      "Name":  "Bat loi sai mat khau",
+                      "Status":  "PASS",
+                      "Detail":  "HTTP 401 - Dung: tu choi sai mat khau"
+                  },
+                  {
+                      "ID":  "TC-10",
+                      "Group":  "Dang Nhap",
+                      "Name":  "Refresh Token hop le",
+                      "Status":  "PASS",
+                      "Detail":  "Refresh OK, New Token: eyJhbGciOiJIUzI1NiJ9..."
+                  },
+                  {
+                      "ID":  "TC-11",
+                      "Group":  "Users API",
+                      "Name":  "Lay danh sach nguoi dung (GET /api/users)",
+                      "Status":  "PASS",
+                      "Detail":  "So luong users: 10"
+                  },
+                  {
+                      "ID":  "TC-12",
+                      "Group":  "Chat 1-1",
+                      "Name":  "Tao cuoc tro chuyen Direct (Alice -\u003e Bob)",
+                      "Status":  "PASS",
+                      "Detail":  "ConvId: 05e1ff0d-2d15-42ed-97b9-11a6a4a2458d, Type: DIRECT, Members: 2"
+                  },
+                  {
+                      "ID":  "TC-13",
+                      "Group":  "Chat 1-1",
+                      "Name":  "Khu trung lap - tao lai chat Alice-\u003eBob tra ve ID cu",
+                      "Status":  "PASS",
+                      "Detail":  "Dung: tra ve cung ConvId 05e1ff0d-2d15-42ed-97b9-11a6a4a2458d"
+                  },
+                  {
+                      "ID":  "TC-14",
+                      "Group":  "Chat 1-1",
+                      "Name":  "Bat loi tu tao chat voi chinh minh",
+                      "Status":  "PASS",
+                      "Detail":  "HTTP 400 - Dung: tu choi tu chat"
+                  },
+                  {
+                      "ID":  "TC-15",
+                      "Group":  "Chat Nhom",
+                      "Name":  "Tao nhom chat (Alice + Bob + Charlie)",
+                      "Status":  "PASS",
+                      "Detail":  "GroupId: 22e1a6ca-351d-477d-8ef0-f8f1b001932c, Name: Nhom Test 20260818_102314, Members: 3"
+                  },
+                  {
+                      "ID":  "TC-16",
+                      "Group":  "Conversations",
+                      "Name":  "Lay danh sach hoi thoai cua Alice",
+                      "Status":  "PASS",
+                      "Detail":  "So luong conversations: 2"
+                  },
+                  {
+                      "ID":  "TC-17",
+                      "Group":  "Conversations",
+                      "Name":  "Lay danh sach hoi thoai cua Bob",
+                      "Status":  "PASS",
+                      "Detail":  "So luong conversations cua Bob: 2"
+                  },
+                  {
+                      "ID":  "TC-18",
+                      "Group":  "Gui Tin Nhan",
+                      "Name":  "Alice gui tin nhan vao chat Direct (REST API)",
+                      "Status":  "PASS",
+                      "Detail":  "MsgId: 295170f0-9ab4-11f1-b6d4-69cfdf5f583e, Status: SENT"
+                  },
+                  {
+                      "ID":  "TC-19",
+                      "Group":  "Gui Tin Nhan",
+                      "Name":  "Alice gui tin nhan vao chat Nhom (REST API)",
+                      "Status":  "PASS",
+                      "Detail":  "MsgId: 2a116590-9ab4-11f1-b6d4-69cfdf5f583e, Status: SENT"
+                  },
+                  {
+                      "ID":  "TC-20",
+                      "Group":  "Gui Tin Nhan",
+                      "Name":  "Gui tin nhan co dinh kem anh (mediaUrls)",
+                      "Status":  "PASS",
+                      "Detail":  "MsgId: 2a1e0fc0-9ab4-11f1-b6d4-69cfdf5f583e, MediaUrls: https://picsum.photos/400/300"
+                  },
+                  {
+                      "ID":  "TC-21",
+                      "Group":  "Lich Su",
+                      "Name":  "Lay lich su tin nhan Direct (Cassandra)",
+                      "Status":  "PASS",
+                      "Detail":  "So luong tin nhan: 2"
+                  },
+                  {
+                      "ID":  "TC-22",
+                      "Group":  "Lich Su",
+                      "Name":  "Lay lich su tin nhan Group (Cassandra)",
+                      "Status":  "PASS",
+                      "Detail":  "So luong tin nhan group: 1"
+                  },
+                  {
+                      "ID":  "TC-23",
+                      "Group":  "Bao Mat",
+                      "Name":  "Truy cap API khong co token -\u003e 401",
+                      "Status":  "PASS",
+                      "Detail":  "HTTP 401 - Dung: tu choi khi thieu token"
+                  },
+                  {
+                      "ID":  "TC-24",
+                      "Group":  "Bao Mat",
+                      "Name":  "Truy cap API voi token gia -\u003e 401",
+                      "Status":  "PASS",
+                      "Detail":  "HTTP 401 - Dung: tu choi token gia"
+                  },
+                  {
+                      "ID":  "TC-25",
+                      "Group":  "WebSocket",
+                      "Name":  "WS Handshake khong co token -\u003e tu choi",
+                      "Status":  "PASS",
+                      "Detail":  "HTTP 401 - Server tu choi ket noi khong token"
+                  }
+              ],
+    "timestamp":  "2026-08-18 10:23:22",
+    "total":  25,
+    "failed":  3,
+    "successRate":  "88%"
+}

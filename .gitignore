@@ -1,0 +1,9 @@
+target/
+node_modules/
+*.log
+.vscode/
+.azure/
+.github/modernize/
+.idea/
+*.iml
+.env

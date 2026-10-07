@@ -1,0 +1,35 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${AUTH_DB:authdb}
+    username: ${POSTGRES_USER:chatuser}
+    password: ${POSTGRES_PASSWORD:chatpass}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+app:
+  jwt:
+    # HS256 -> secret phải >= 32 bytes. Production: inject qua biến môi trường JWT_SECRET.
+    secret: ${JWT_SECRET:dev-only-secret-key-change-me-0123456789abcdef0123456789abcdef}
+    access-token-ttl-minutes: 1440
+    refresh-token-ttl-days: 7
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+

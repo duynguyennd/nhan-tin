@@ -1,0 +1,32 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: ws-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+app:
+  jwt:
+    # Phải khớp với JWT_SECRET của auth-service (HS256 shared secret)
+    secret: ${JWT_SECRET:dev-only-secret-key-change-me-0123456789abcdef0123456789abcdef}
+  gateway:
+    id: ${GATEWAY_ID:gateway-1}
+  chat-service:
+    url: ${CHAT_SERVICE_URL:http://localhost:8082}
+  redis:
+    # Channel nhận sự kiện tin nhắn mới từ chat-service
+    message-channel: chat.messages
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+

@@ -1,0 +1,163 @@
+name: chat-system
+
+services:
+  # ---------------------------------------------------------------------------
+  # DATA & INFRASTRUCTURE LAYER
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: chat-postgres
+    environment:
+      POSTGRES_USER: chatuser
+      POSTGRES_PASSWORD: chatpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatuser"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: chat-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  cassandra:
+    image: cassandra:5.0
+    container_name: chat-cassandra
+    environment:
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_RACK: rack1
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandradata:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+
+  cassandra-init:
+    image: cassandra:5.0
+    container_name: chat-cassandra-init
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./docker/cassandra/init.cql:/init.cql:ro
+    entrypoint: ["bash", "-c", "cqlsh cassandra -f /init.cql"]
+
+  minio:
+    image: minio/minio:latest
+    container_name: chat-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+
+  # ---------------------------------------------------------------------------
+  # MICROSERVICES LAYER
+  # ---------------------------------------------------------------------------
+  auth-service:
+    build: ./auth-service
+    container_name: chat-auth-service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: chatuser
+      POSTGRES_PASSWORD: chatpass
+      AUTH_DB: authdb
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-key-change-me-0123456789abcdef0123456789abcdef}
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  chat-service:
+    build: ./chat-service
+    container_name: chat-chat-service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: chatuser
+      POSTGRES_PASSWORD: chatpass
+      CHAT_DB: chatdb
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: 9042
+      CASSANDRA_DC: datacenter1
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-key-change-me-0123456789abcdef0123456789abcdef}
+      MINIO_URL: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: chat-media
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      cassandra-init:
+        condition: service_completed_successfully
+
+  ws-gateway:
+    build: ./ws-gateway
+    container_name: chat-ws-gateway
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CHAT_SERVICE_URL: http://chat-service:8082
+      GATEWAY_ID: gateway-1
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-key-change-me-0123456789abcdef0123456789abcdef}
+    ports:
+      - "8083:8083"
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      chat-service:
+        condition: service_started
+
+  gateway:
+    image: nginx:alpine
+    container_name: chat-nginx-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./demo-client:/usr/share/nginx/html:ro
+    depends_on:
+      - auth-service
+      - chat-service
+      - ws-gateway
+
+volumes:
+  pgdata:
+  cassandradata:
+  miniodata:

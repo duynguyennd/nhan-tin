@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+    <defs>
+      <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f59e0b"/>
+        <stop offset="100%" stop-color="#d97706"/>
+      </linearGradient>
+    </defs>
+    <rect width="400" height="300" rx="14" fill="url(#bg)"/>
+    <rect x="10" y="10" width="380" height="280" rx="10" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+    <text x="200" y="45" font-family="'Outfit', Impact, sans-serif" font-weight="900" font-size="22" fill="#ffffff" text-anchor="middle" letter-spacing="1.5">
+      MUCH HAPPINESS
+    </text>
+    <circle cx="200" cy="145" r="58" fill="rgba(255,255,255,0.12)"/>
+    <text x="200" y="165" font-size="70" text-anchor="middle">🐕</text>
+    <text x="200" y="260" font-family="'Outfit', Impact, sans-serif" font-weight="900" font-size="19" fill="#fef08a" text-anchor="middle" letter-spacing="1">
+      VERY WEBSOCKET 0MS!
+    </text>
+  </svg>

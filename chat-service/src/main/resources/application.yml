@@ -1,0 +1,51 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: chat-service
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${CHAT_DB:chatdb}
+    username: ${POSTGRES_USER:chatuser}
+    password: ${POSTGRES_PASSWORD:chatpass}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  cassandra:
+    keyspace-name: chat_system
+    contact-points: ${CASSANDRA_HOST:localhost}
+    port: ${CASSANDRA_PORT:9042}
+    local-datacenter: ${CASSANDRA_DC:datacenter1}
+    schema-action: create_if_not_exists
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+app:
+  jwt:
+    # Phải khớp với JWT_SECRET của auth-service (HS256 shared secret)
+    secret: ${JWT_SECRET:dev-only-secret-key-change-me-0123456789abcdef0123456789abcdef}
+  redis:
+    # Channel Pub/Sub để phát sự kiện tin nhắn mới tới các WS Gateway
+    message-channel: chat.messages
+  minio:
+    url: ${MINIO_URL:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin}
+    bucket-name: ${MINIO_BUCKET:chat-media}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
